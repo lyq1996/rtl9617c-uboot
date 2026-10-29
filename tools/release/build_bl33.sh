@@ -101,6 +101,27 @@ EOF
 	    -e 's|schedule();|((void)0);|' \
 	    lib/lzma/LzmaDec.c >"$ldir/lzma/LzmaDec.c"
 
+	# The stub is bare metal: no hosted libc may leak into it.  $ldir/lzma is
+	# the first -I directory, so these shims win over any system header and
+	# the build stops depending on how the toolchain lays out its sysroot.
+	#   errno.h   7zTypes.h pulls it in but never uses it
+	#   string.h  LzmaDec.c needs memcpy; main.c defines memcpy/memset
+	cat >"$ldir/lzma/errno.h" <<'EOF'
+/* Loader shim: 7zTypes.h includes <errno.h> but never uses errno. */
+#ifndef LOADER_ERRNO_SHIM_H
+#define LOADER_ERRNO_SHIM_H
+#endif
+EOF
+	cat >"$ldir/lzma/string.h" <<'EOF'
+/* Loader shim: the stub is freestanding; memcpy/memset come from main.c. */
+#ifndef LOADER_STRING_SHIM_H
+#define LOADER_STRING_SHIM_H
+#include <stddef.h>
+void *memcpy(void *dest, const void *src, size_t size);
+void *memset(void *dest, int value, size_t size);
+#endif
+EOF
+
 	cflags="-Os -ffreestanding -fno-builtin -fno-stack-protector -fno-pie \
 -mgeneral-regs-only -mstrict-align -ffunction-sections -fdata-sections \
 -Wall -Wextra -Werror -DZ7_LZMA_SIZE_OPT -I$REPO/$ldir -I$REPO/$ldir/lzma"
