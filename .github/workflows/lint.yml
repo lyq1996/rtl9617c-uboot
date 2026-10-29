@@ -92,10 +92,13 @@ jobs:
           # ship their own shell code and are out of scope.
           scripts=$(git ls-files 'build.sh' 'tools/release/*.sh')
           echo "checking: $scripts"
+          # SC1007: false positive on the `CDPATH= cd -- ...` idiom, which is
+          # the portable way to neutralise a stray CDPATH before `cd`.
           # SC2312: 'set -eu' scripts intentionally invoke commands in $() without
           # checking individual exit codes; the build scripts rely on `set -e`
           # and explicit die() checks instead.
-          shellcheck --shell=sh --severity=warning --exclude=SC2312 $scripts
+          shellcheck --shell=sh --severity=warning \
+            --exclude=SC1007,SC2312 $scripts
 
   python:
     name: python tooling

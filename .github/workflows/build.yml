@@ -175,9 +175,11 @@ jobs:
       - name: Collect release files
         run: |
           set -eu
+          # pack_boot.py writes <board>.boot.bin / .fip.bin / .manifest.json
+          # into output/<board>/ (tools/release/pack_boot.py:357-381).
           mkdir -p "dist/$BOARD"
           cp "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin" \
-             "output/$BOARD/manifest.json" "dist/$BOARD/"
+             "output/$BOARD/$BOARD.manifest.json" "dist/$BOARD/"
           ( cd "dist/$BOARD" && sha256sum ./* > sha256sums.txt )
           tar -C dist -czf "$BOARD-boot.tar.gz" "$BOARD"
           echo "artifact: $BOARD-boot.tar.gz"
@@ -214,7 +216,7 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" \
             "dist/$BOARD/$BOARD.boot.bin" \
             "dist/$BOARD/$BOARD.fip.bin" \
-            "dist/$BOARD/manifest.json" \
+            "dist/$BOARD/$BOARD.manifest.json" \
             "dist/$BOARD/sha256sums.txt" \
             --repo "${{ github.repository }}" --clobber
 
