@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Run U-Boot's own checkpatch on the commits carried by a pull request
+# (or on the pushed commit). Uses the repo's .checkpatch.conf.
+#
+# MISSING_SIGN_OFF is off by default: commits made through the GitHub web
+# editor ("Add files via upload") carry no Signed-off-by. Turn it back on
+# with workflow_dispatch -> require_signoff=true when preparing patches for
+# upstream, where the sign-off is mandatory.
+#
+# Runner pinned to ubuntu-24.04, checkout on the Node 24 line (v5): Node 20
+# was removed from runners on 2026-09-23, and "ubuntu-latest" starts moving
+# to Ubuntu 26.04 on 2026-10-19 (actions/runner-images#14748).
+#
+name: checkpatch
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+    inputs:
+      require_signoff:
+        description: "Fail on missing Signed-off-by (upstream submission)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checkpatch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checkpatch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Collect the commits to check
+        id: range
+        run: |
+          set -eu
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags origin "${{ github.base_ref }}"
+            echo "range=origin/${{ github.base_ref }}..HEAD" >> "$GITHUB_OUTPUT"
+          else
+            echo "range=-1 HEAD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Format patches
+        run: |
+          set -eu
+          # shellcheck disable=SC2086
+          git format-patch --no-signature --stdout ${{ steps.range.outputs.range }} \
+            > "${RUNNER_TEMP}/patches.patch"
+          if [ ! -s "${RUNNER_TEMP}/patches.patch" ]; then
+            echo "no commits to check"
+            exit 0
+          fi
+
+      - name: checkpatch.pl
+        env:
+          # comes in through the environment, never interpolated into the script
+          REQUIRE_SIGNOFF: ${{ github.event.inputs.require_signoff }}
+        run: |
+          set -eu
+          ignores="FILE_PATH_CHANGES,GERRIT_CHANGE_ID,COMMIT_MESSAGE"
+          if [ "${REQUIRE_SIGNOFF:-false}" != "true" ]; then
+            ignores="$ignores,MISSING_SIGN_OFF"
+          fi
+          echo "ignoring: $ignores"
+          ./scripts/checkpatch.pl --no-tree --strict --show-types -q \
+            --ignore "$ignores" \
+            "${RUNNER_TEMP}/patches.patch"
