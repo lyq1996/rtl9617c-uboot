@@ -6,6 +6,10 @@
 #   - release shell scripts pass shellcheck
 #   - release python tooling still compiles
 #
+# Runner pinned to ubuntu-24.04, actions on the Node 24 line: Node 20 was
+# removed from runners on 2026-09-23, and "ubuntu-latest" starts moving to
+# Ubuntu 26.04 on 2026-10-19 (actions/runner-images#14748).
+#
 name: Lint & sanity
 
 on:
@@ -29,9 +33,9 @@ concurrency:
 jobs:
   defconfig:
     name: defconfig canonical form
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Kconfig tooling
         run: |
@@ -58,9 +62,9 @@ jobs:
 
   stock:
     name: stock backups
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check recorded digests
         run: |
@@ -82,9 +86,9 @@ jobs:
 
   shell:
     name: shellcheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run shellcheck
         run: |
           set -eu
@@ -102,8 +106,8 @@ jobs:
 
   python:
     name: python tooling
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Byte-compile release tooling
         run: python3 -m compileall -q tools/release/pack_boot.py
