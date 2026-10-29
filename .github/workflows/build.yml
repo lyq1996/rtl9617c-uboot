@@ -1,0 +1,145 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Build the flashable boot images (BL33 stub -> signed FIP -> mtd0 image)
+# for every board declared in tools/release/boards/*.json.
+#
+#   push / pull_request  -> build + verify, publish artifacts
+#   tag "v*"             -> additionally attach the images to the Release
+#
+name: Build boot images
+
+on:
+  push:
+    branches: ["main", "master"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Boards come from the repo itself, so adding boards/<name>.json is enough
+  # to get a new CI leg; nothing here needs editing.
+  boards:
+    name: Resolve board matrix
+    runs-on: ubuntu-latest
+    outputs:
+      boards: ${{ steps.matrix.outputs.boards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: matrix
+        name: Read tools/release/boards/*.json
+        run: |
+          set -eu
+          boards=$(python3 -c 'import glob, json, os; print(json.dumps(sorted(os.path.basename(p)[:-5] for p in glob.glob("tools/release/boards/*.json"))))')
+          test "$boards" != "[]" || { echo "no board definitions found" >&2; exit 1; }
+          echo "boards=$boards" >> "$GITHUB_OUTPUT"
+          echo "Board matrix: $boards" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: ${{ matrix.board }}
+    needs: boards
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write # needed to upload release assets on tags
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ${{ fromJson(needs.boards.outputs.boards) }}
+    env:
+      BOARD: ${{ matrix.board }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            bc bison build-essential ccache device-tree-compiler flex \
+            gcc-aarch64-linux-gnu gzip libncurses-dev libssl-dev \
+            openssl pkg-config python3 python3-cryptography python3-jsonschema \
+            python3-pyelftools python3-setuptools python3-yaml swig \
+            uuid-dev xz-utils
+
+      - name: Set up ccache
+        run: |
+          mkdir -p "$HOME/.ccache/bin"
+          ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/aarch64-linux-gnu-gcc"
+          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
+          echo "CCACHE_DIR=$HOME/.ccache" >> "$GITHUB_ENV"
+          ccache -M 500M
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.board }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.board }}-
+
+      - name: Build u-boot + signed image
+        run: |
+          chmod +x build.sh tools/release/build_bl33.sh
+          ./build.sh "$BOARD"
+
+      - name: Verify against the stock backup
+        run: ./build.sh "$BOARD" verify
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "### $BOARD"
+            echo
+            echo '```'
+            grep '^==>' "output/$BOARD/build.log" || true
+            echo '```'
+            echo
+            echo "| file | bytes |"
+            echo "|---|---|"
+            for f in "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin"; do
+              [ -f "$f" ] && echo "| $(basename "$f") | $(stat -c%s "$f") |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload images
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.board }}-boot-${{ github.sha }}
+          path: |
+            output/${{ matrix.board }}/${{ matrix.board }}.boot.bin
+            output/${{ matrix.board }}/${{ matrix.board }}.fip.bin
+            output/${{ matrix.board }}/manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.board }}-build-log-${{ github.sha }}
+          path: output/${{ matrix.board }}/build.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Attach images to the Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "${{ github.repository }}" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --repo "${{ github.repository }}" \
+                 --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" \
+            "output/$BOARD/$BOARD.boot.bin" \
+            "output/$BOARD/$BOARD.fip.bin" \
+            "output/$BOARD/manifest.json" \
+            --repo "${{ github.repository }}" --clobber
