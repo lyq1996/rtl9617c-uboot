@@ -3,6 +3,11 @@
 # Run U-Boot's own checkpatch on the commits carried by a pull request
 # (or on the pushed commit). Uses the repo's .checkpatch.conf.
 #
+# MISSING_SIGN_OFF is off by default: commits made through the GitHub web
+# editor ("Add files via upload") carry no Signed-off-by. Turn it back on
+# with workflow_dispatch -> require_signoff=true when preparing patches for
+# upstream, where the sign-off is mandatory.
+#
 name: checkpatch
 
 on:
@@ -11,6 +16,13 @@ on:
   push:
     branches: ["main", "master"]
   workflow_dispatch:
+    inputs:
+      require_signoff:
+        description: "Fail on missing Signed-off-by (upstream submission)"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
 
 permissions:
   contents: read
@@ -51,8 +63,16 @@ jobs:
           fi
 
       - name: checkpatch.pl
+        env:
+          # comes in through the environment, never interpolated into the script
+          REQUIRE_SIGNOFF: ${{ github.event.inputs.require_signoff }}
         run: |
           set -eu
+          ignores="FILE_PATH_CHANGES,GERRIT_CHANGE_ID,COMMIT_MESSAGE"
+          if [ "${REQUIRE_SIGNOFF:-false}" != "true" ]; then
+            ignores="$ignores,MISSING_SIGN_OFF"
+          fi
+          echo "ignoring: $ignores"
           ./scripts/checkpatch.pl --no-tree --strict --show-types -q \
-            --ignore FILE_PATH_CHANGES,GERRIT_CHANGE_ID,COMMIT_MESSAGE \
+            --ignore "$ignores" \
             "${RUNNER_TEMP}/patches.patch"
