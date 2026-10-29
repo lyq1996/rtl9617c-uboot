@@ -1,0 +1,113 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Cheap pre-build sanity checks that need no cross toolchain:
+#   - defconfigs are in canonical (savedefconfig) form
+#   - stock boot backups still match the digest recorded in boards/*.json
+#   - release shell scripts pass shellcheck
+#   - release python tooling still compiles
+#
+# Runner pinned to ubuntu-24.04, actions on the Node 24 line: Node 20 was
+# removed from runners on 2026-09-23, and "ubuntu-latest" starts moving to
+# Ubuntu 26.04 on 2026-10-19 (actions/runner-images#14748).
+#
+name: Lint & sanity
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths-ignore:
+      - "doc/**"
+  pull_request:
+    branches: ["main", "master"]
+    paths-ignore:
+      - "doc/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  defconfig:
+    name: defconfig canonical form
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Kconfig tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            bison build-essential flex libncurses-dev python3
+
+      - name: Compare every board defconfig with savedefconfig
+        run: |
+          set -eu
+          status=0
+          for json in tools/release/boards/*.json; do
+            board=$(basename "$json" .json)
+            cfg=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["defconfig"])' "$json")
+            echo "==> $board: $cfg"
+            make O="build/defconfig/$board" "$cfg" >/dev/null
+            make O="build/defconfig/$board" savedefconfig >/dev/null
+            if ! diff -u "configs/$cfg" "build/defconfig/$board/defconfig"; then
+              echo "::error::$cfg is not in canonical form; run 'make $cfg && make savedefconfig'" >&2
+              status=1
+            fi
+          done
+          exit "$status"
+
+  stock:
+    name: stock backups
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check recorded digests
+        run: |
+          set -eu
+          status=0
+          for json in tools/release/boards/*.json; do
+            stock="tools/release/stocks/$(basename "$json" .json)/stock-mtd0.bin"
+            if ! python3 -c 'import hashlib, json, sys;
+          cfg = json.load(open(sys.argv[1]))
+          want = cfg["stock_sha256"]
+          got = hashlib.sha256(open(sys.argv[2], "rb").read()).hexdigest()
+          print("%s: %s" % (cfg["board"], "ok" if got == want else "MISMATCH"))
+          sys.exit(0 if got == want else 1)' "$json" "$stock"; then
+              echo "::error::$stock does not match stock_sha256 in $json" >&2
+              status=1
+            fi
+          done
+          exit "$status"
+
+  shell:
+    name: shellcheck
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run shellcheck
+        run: |
+          set -eu
+          # Only the release scripts we own; vendored trees (lwip, mbedtls)
+          # ship their own shell code and are out of scope.
+          scripts=$(git ls-files 'build.sh' 'tools/release/*.sh')
+          echo "checking: $scripts"
+          # SC1007: false positive on the `CDPATH= cd -- ...` idiom, which is
+          # the portable way to neutralise a stray CDPATH before `cd`.
+          # SC2312: 'set -eu' scripts intentionally invoke commands in $() without
+          # checking individual exit codes; the build scripts rely on `set -e`
+          # and explicit die() checks instead.
+          shellcheck --shell=sh --severity=warning \
+            --exclude=SC1007,SC2312 $scripts
+
+  python:
+    name: python tooling
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Byte-compile release tooling
+        run: python3 -m compileall -q tools/release/pack_boot.py
