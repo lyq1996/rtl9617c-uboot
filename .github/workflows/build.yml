@@ -5,6 +5,12 @@
 #
 #   push / pull_request  -> build + verify, publish artifacts
 #   tag "v*"             -> additionally attach the images to the Release
+#   workflow_dispatch    -> pick one board, or all
+#
+# Style follows the u-boot board-vendor CI convention: a board matrix read
+# out of the tree, one build.sh invocation per step (bl33 / pack / verify)
+# so the log shows exactly which stage broke, ccache across runs, and a
+# collapsed "::group::" section per stage.
 #
 name: Build boot images
 
@@ -12,9 +18,21 @@ on:
   push:
     branches: ["main", "master"]
     tags: ["v*"]
+    paths-ignore:
+      - "**.md"
+      - "doc/**"
+      - ".github/**"
   pull_request:
     branches: ["main", "master"]
+    paths-ignore:
+      - "**.md"
+      - "doc/**"
   workflow_dispatch:
+    inputs:
+      board:
+        description: "Board to build (tools/release/boards/*.json)"
+        required: false
+        default: "all"
 
 permissions:
   contents: read
@@ -37,10 +55,23 @@ jobs:
         name: Read tools/release/boards/*.json
         run: |
           set -eu
-          boards=$(python3 -c 'import glob, json, os; print(json.dumps(sorted(os.path.basename(p)[:-5] for p in glob.glob("tools/release/boards/*.json"))))')
-          test "$boards" != "[]" || { echo "no board definitions found" >&2; exit 1; }
+          # comes in through the environment, never interpolated into the script
+          boards=$(WANT="$WANT" python3 - <<'PY'
+          import glob, json, os
+          want = os.environ.get("WANT", "").strip()
+          all_boards = sorted(os.path.basename(p)[:-5]
+                              for p in glob.glob("tools/release/boards/*.json"))
+          if want and want != "all":
+              print(json.dumps([b for b in all_boards if b == want]))
+          else:
+              print(json.dumps(all_boards))
+          PY
+          )
+          test "$boards" != "[]" || { echo "no matching board definition" >&2; exit 1; }
           echo "boards=$boards" >> "$GITHUB_OUTPUT"
           echo "Board matrix: $boards" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          WANT: ${{ github.event.inputs.board }}
 
   build:
     name: ${{ matrix.board }}
@@ -59,7 +90,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install host dependencies
+      - name: Install deps
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
@@ -67,7 +98,7 @@ jobs:
             gcc-aarch64-linux-gnu gzip libncurses-dev libssl-dev \
             openssl pkg-config python3 python3-cryptography python3-jsonschema \
             python3-pyelftools python3-setuptools python3-yaml swig \
-            uuid-dev xz-utils
+            u-boot-tools uuid-dev xz-utils
 
       - name: Set up ccache
         run: |
@@ -84,14 +115,28 @@ jobs:
           key: ccache-${{ matrix.board }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.board }}-
+            ccache-
 
       - name: Build u-boot + signed image
         run: |
+          set -eu
           chmod +x build.sh tools/release/build_bl33.sh
-          ./build.sh "$BOARD"
 
-      - name: Verify against the stock backup
-        run: ./build.sh "$BOARD" verify
+          echo "::group::$BOARD: bl33 (u-boot -> lzma -> stub)"
+          ./build.sh "$BOARD" bl33
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: pack (sign + rebuild both fip slots)"
+          ./build.sh "$BOARD" pack
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: verify against the stock backup"
+          ./build.sh "$BOARD" verify
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: ccache stats"
+          ccache -s
+          echo "::endgroup::"
 
       - name: Build summary
         if: always()
@@ -110,14 +155,22 @@ jobs:
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload images
+      - name: Collect release files
+        run: |
+          set -eu
+          mkdir -p "dist/$BOARD"
+          cp "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin" \
+             "output/$BOARD/manifest.json" "dist/$BOARD/"
+          ( cd "dist/$BOARD" && sha256sum ./* > sha256sums.txt )
+          tar -C dist -czf "$BOARD-boot.tar.gz" "$BOARD"
+          echo "artifact: $BOARD-boot.tar.gz"
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.board }}-boot-${{ github.sha }}
           path: |
-            output/${{ matrix.board }}/${{ matrix.board }}.boot.bin
-            output/${{ matrix.board }}/${{ matrix.board }}.fip.bin
-            output/${{ matrix.board }}/manifest.json
+            ${{ matrix.board }}-boot.tar.gz
           if-no-files-found: error
           retention-days: 30
 
@@ -130,16 +183,34 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+      # Uses the built-in token and gh, so no third-party action is involved.
+      # Swap in softprops/action-gh-release@v2 if you prefer that style.
       - name: Attach images to the Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -eu
           gh release view "$GITHUB_REF_NAME" --repo "${{ github.repository }}" >/dev/null 2>&1 \
             || gh release create "$GITHUB_REF_NAME" --repo "${{ github.repository }}" \
                  --title "$GITHUB_REF_NAME" --generate-notes
           gh release upload "$GITHUB_REF_NAME" \
-            "output/$BOARD/$BOARD.boot.bin" \
-            "output/$BOARD/$BOARD.fip.bin" \
-            "output/$BOARD/manifest.json" \
+            "dist/$BOARD/$BOARD.boot.bin" \
+            "dist/$BOARD/$BOARD.fip.bin" \
+            "dist/$BOARD/manifest.json" \
+            "dist/$BOARD/sha256sums.txt" \
             --repo "${{ github.repository }}" --clobber
+
+  # One green/red line for the whole matrix, so a multi-board run is readable.
+  summary:
+    name: Summary
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report
+        run: |
+          case '${{ needs.build.result }}' in
+            success) echo "all boards built and verified" ;;
+            *) echo "::error::one or more boards failed: ${{ needs.build.result }}"; exit 1 ;;
+          esac

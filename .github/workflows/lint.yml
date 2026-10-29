@@ -11,8 +11,12 @@ name: Lint & sanity
 on:
   push:
     branches: ["main", "master"]
+    paths-ignore:
+      - "doc/**"
   pull_request:
     branches: ["main", "master"]
+    paths-ignore:
+      - "doc/**"
   workflow_dispatch:
 
 permissions:
