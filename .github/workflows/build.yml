@@ -95,10 +95,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
             bc bison build-essential ccache device-tree-compiler flex \
-            gcc-aarch64-linux-gnu gzip libncurses-dev libssl-dev \
+            gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+            gzip libncurses-dev libssl-dev \
             openssl pkg-config python3 python3-cryptography python3-jsonschema \
             python3-pyelftools python3-setuptools python3-yaml swig \
             u-boot-tools uuid-dev xz-utils
+
+      # Fail here, not 40 minutes into the build, if the cross compiler is
+      # unusable. The BL33 stub is freestanding: gcc's own stddef/stdint are
+      # all it may need from the toolchain (see build_bl33.sh).
+      - name: Cross toolchain sanity check
+        run: |
+          set -eu
+          aarch64-linux-gnu-gcc --version | head -1
+          printf '#include <stddef.h>\n#include <stdint.h>\nsize_t x;\n' \
+            | aarch64-linux-gnu-gcc -ffreestanding -mgeneral-regs-only \
+                -mstrict-align -x c - -c -o /dev/null
+          echo "cross toolchain ok"
 
       - name: Set up ccache
         run: |
@@ -151,7 +164,11 @@ jobs:
             echo "| file | bytes |"
             echo "|---|---|"
             for f in "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin"; do
-              [ -f "$f" ] && echo "| $(basename "$f") | $(stat -c%s "$f") |"
+              if [ -f "$f" ]; then
+                echo "| $(basename "$f") | $(stat -c%s "$f") |"
+              else
+                echo "| $(basename "$f") | missing |"
+              fi
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
