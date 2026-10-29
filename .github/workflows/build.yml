@@ -1,0 +1,261 @@
+name: Build boot images
+
+on:
+  push:
+    branches: ["main", "master"]
+    tags: ["v*"]
+    paths-ignore:
+      - "**.md"
+      - "doc/**"
+      - ".github/**"
+  pull_request:
+    branches: ["main", "master"]
+    paths-ignore:
+      - "**.md"
+      - "doc/**"
+  workflow_dispatch:
+    inputs:
+      board:
+        description: "Board to build (tools/release/boards/*.json)"
+        required: false
+        default: "all"
+      publish:
+        description: "Attach the images to a Release"
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+      release_tag:
+        description: "Release tag to publish to (default: ci-<short sha>)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Boards come from the repo itself, so adding boards/<name>.json is enough
+  # to get a new CI leg; nothing here needs editing.
+  boards:
+    name: Resolve board matrix
+    runs-on: ubuntu-24.04
+    outputs:
+      boards: ${{ steps.matrix.outputs.boards }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: matrix
+        name: Read tools/release/boards/*.json
+        run: |
+          set -eu
+          # comes in through the environment, never interpolated into the script
+          boards=$(WANT="$WANT" python3 - <<'PY'
+          import glob, json, os
+          want = os.environ.get("WANT", "").strip()
+          all_boards = sorted(os.path.basename(p)[:-5]
+                              for p in glob.glob("tools/release/boards/*.json"))
+          if want and want != "all":
+              print(json.dumps([b for b in all_boards if b == want]))
+          else:
+              print(json.dumps(all_boards))
+          PY
+          )
+          test "$boards" != "[]" || { echo "no matching board definition" >&2; exit 1; }
+          echo "boards=$boards" >> "$GITHUB_OUTPUT"
+          echo "Board matrix: $boards" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          WANT: ${{ github.event.inputs.board }}
+
+  build:
+    name: ${{ matrix.board }}
+    needs: boards
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write # needed to upload release assets on tags
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ${{ fromJson(needs.boards.outputs.boards) }}
+    env:
+      BOARD: ${{ matrix.board }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            bc bison build-essential ccache device-tree-compiler flex \
+            gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+            gzip libncurses-dev libssl-dev \
+            openssl pkg-config python3 python3-cryptography python3-jsonschema \
+            python3-pyelftools python3-setuptools python3-yaml swig \
+            u-boot-tools uuid-dev xz-utils
+
+      # Fail here, not 40 minutes into the build, if the cross compiler is
+      # unusable. The BL33 stub is freestanding: gcc's own stddef/stdint are
+      # all it may need from the toolchain (see build_bl33.sh).
+      - name: Cross toolchain sanity check
+        run: |
+          set -eu
+          aarch64-linux-gnu-gcc --version | head -1
+          printf '#include <stddef.h>\n#include <stdint.h>\nsize_t x;\n' \
+            | aarch64-linux-gnu-gcc -ffreestanding -mgeneral-regs-only \
+                -mstrict-align -x c - -c -o /dev/null
+          echo "cross toolchain ok"
+
+      - name: Set up ccache
+        run: |
+          mkdir -p "$HOME/.ccache/bin"
+          ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/aarch64-linux-gnu-gcc"
+          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
+          echo "CCACHE_DIR=$HOME/.ccache" >> "$GITHUB_ENV"
+          ccache -M 500M
+
+      - name: Restore ccache
+        uses: actions/cache@v5
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.board }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.board }}-
+            ccache-
+
+      - name: Build u-boot + signed image
+        run: |
+          set -eu
+          chmod +x build.sh tools/release/build_bl33.sh
+
+          echo "::group::$BOARD: bl33 (u-boot -> lzma -> stub)"
+          ./build.sh "$BOARD" bl33
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: pack (sign + rebuild both fip slots)"
+          ./build.sh "$BOARD" pack
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: verify against the stock backup"
+          ./build.sh "$BOARD" verify
+          echo "::endgroup::"
+
+          echo "::group::$BOARD: ccache stats"
+          ccache -s
+          echo "::endgroup::"
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "### $BOARD"
+            echo
+            echo '```'
+            grep '^==>' "output/$BOARD/build.log" || true
+            echo '```'
+            echo
+            echo "| file | bytes |"
+            echo "|---|---|"
+            for f in "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin"; do
+              if [ -f "$f" ]; then
+                echo "| $(basename "$f") | $(stat -c%s "$f") |"
+              else
+                echo "| $(basename "$f") | missing |"
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Collect release files
+        run: |
+          set -eu
+          # pack_boot.py writes <board>.boot.bin / .fip.bin / .manifest.json
+          # into output/<board>/ (tools/release/pack_boot.py:357-381).
+          mkdir -p "dist/$BOARD"
+          cp "output/$BOARD/$BOARD.boot.bin" "output/$BOARD/$BOARD.fip.bin" \
+             "output/$BOARD/$BOARD.manifest.json" "dist/$BOARD/"
+          ( cd "dist/$BOARD" && sha256sum ./* > sha256sums.txt )
+          tar -C dist -czf "$BOARD-boot.tar.gz" "$BOARD"
+          echo "artifact: $BOARD-boot.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.board }}-boot-${{ github.sha }}
+          path: |
+            ${{ matrix.board }}-boot.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.board }}-build-log-${{ github.sha }}
+          path: output/${{ matrix.board }}/build.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      # Uses the built-in token and gh, so no third-party action is involved.
+      # Swap in softprops/action-gh-release@v2 if you prefer that style.
+      #
+      # Runs on tag pushes (refs/tags/v*) AND on manual runs with
+      # publish=true.  A dispatch runs on a branch, so github.ref is
+      # refs/heads/<branch> and GITHUB_REF_NAME is the branch name - the tag
+      # to publish to has to come from the release_tag input (or default to
+      # ci-<short sha>).
+      - name: Attach images to the Release
+        if: >-
+          startsWith(github.ref, 'refs/tags/v') ||
+          github.event.inputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_TAG: ${{ github.event.inputs.release_tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            tag="${DISPATCH_TAG:-}"
+            [ -n "$tag" ] || tag="ci-$(git rev-parse --short=12 HEAD)"
+          else
+            tag="$GITHUB_REF_NAME"
+          fi
+          echo "publishing $BOARD to release: $tag"
+
+          # Two matrix legs can race here; if create loses the race, the
+          # follow-up view confirms the release exists before uploading.
+          if ! gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then
+            if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              gh release create "$tag" --repo "$REPO" --title "$tag" \
+                --generate-notes --target "$GITHUB_SHA" \
+                || gh release view "$tag" --repo "$REPO" >/dev/null
+            else
+              gh release create "$tag" --repo "$REPO" --title "$tag" \
+                --generate-notes \
+                || gh release view "$tag" --repo "$REPO" >/dev/null
+            fi
+          fi
+
+          gh release upload "$tag" \
+            "dist/$BOARD/$BOARD.boot.bin" \
+            "dist/$BOARD/$BOARD.fip.bin" \
+            "dist/$BOARD/$BOARD.manifest.json" \
+            "dist/$BOARD/sha256sums.txt" \
+            --repo "$REPO" --clobber
+
+  # One green/red line for the whole matrix, so a multi-board run is readable.
+  summary:
+    name: Summary
+    needs: build
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Report
+        run: |
+          case '${{ needs.build.result }}' in
+            success) echo "all boards built and verified" ;;
+            *) echo "::error::one or more boards failed: ${{ needs.build.result }}"; exit 1 ;;
+          esac
