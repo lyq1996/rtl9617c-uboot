@@ -151,7 +151,7 @@ config BCM6345_GPIO
 
 config CORTINA_GPIO
 	bool "Cortina-Access GPIO driver"
-	depends on DM_GPIO && CORTINA_PLATFORM
+	depends on DM_GPIO && (CORTINA_PLATFORM || SOC_RTL9617C)
 	help
 	  Enable support for the GPIO controller in Cortina CAxxxx SoCs.
 	  This driver supports all CPU ISA variants supported by Cortina

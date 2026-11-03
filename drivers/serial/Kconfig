@@ -733,7 +733,7 @@ config COREBOOT_SERIAL_FROM_DBG2
 
 config CORTINA_UART
 	bool "Cortina UART support"
-	depends on DM_SERIAL && TARGET_PRESIDIO_ASIC
+	depends on DM_SERIAL && (TARGET_PRESIDIO_ASIC || SOC_RTL9617C)
 	help
 	  Select this to enable UART support for Cortina-Access UART devices
 	  found on CAxxxx SoCs.

@@ -639,6 +639,25 @@ config TEGRA_NAND
 	help
 	  Enables support for NAND Flash chips on Tegra SoCs platforms.
 
+config CORTINA_SPI_NAND
+	bool "Cortina/Realtek SPI NAND controller"
+	depends on DM_MTD && MTD_RAW_NAND && SOC_RTL9617C
+	select SYS_NAND_SELF_INIT
+	imply CMD_NAND
+	help
+	  SPI NAND controller found in the Realtek RTL9617C SoC
+	  (Realtek RTL9617C and relatives). It drives the Flash controller
+	  directly and registers one MTD device.
+
+config RTK_SPI_FLASH_IO_BITS
+	int "SPI NAND IO width"
+	depends on CORTINA_SPI_NAND
+	range 1 4
+	default 1
+	help
+	  Number of IO lines used for SPI NAND transfers: 1 (single), 2 (dual)
+	  or 4 (quad).
+
 config NAND_MT7621
 	bool "Support for MediaTek MT7621 NAND flash controller"
 	depends on SOC_MT7621
