@@ -60,6 +60,8 @@ static inline bool autoboot_set_keyed(bool autoboot_keyed)
  */
 const char *bootdelay_process(void);
 
+void board_autoboot_fail(void);
+
 /**
  * autoboot_command() - run the autoboot command
  *

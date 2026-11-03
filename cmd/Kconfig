@@ -2287,6 +2287,45 @@ config CMD_WGET
 	  wget is a simple command to download kernel, or other files,
 	  from a http server over TCP.
 
+config CMD_HTTPD
+	bool "httpd"
+	depends on NET_LWIP
+	select BUILD_BIN2C
+	select PROT_TCP_LWIP
+	help
+	  HTTP service core for browser based tools such as the board
+	  recovery panel; the board supplies the application.
+
+config HTTPD_DHCP_SERVER
+	bool "DHCP server for httpd"
+	depends on CMD_HTTPD
+	select PROT_UDP_LWIP
+	help
+	  Add a small DHCP address pool which can be enabled with the
+	  "httpd dhcp" command.
+
+config HTTPD_SERVER_IP
+	string "Default httpd server address"
+	depends on CMD_HTTPD
+	default "192.168.0.1"
+
+config HTTPD_SERVER_NETMASK
+	string "Default httpd network mask"
+	depends on CMD_HTTPD
+	default "255.255.255.0"
+
+config HTTPD_DHCP_POOL_START
+	int "Default DHCP pool first host number"
+	depends on HTTPD_DHCP_SERVER
+	range 1 65534
+	default 100
+
+config HTTPD_DHCP_POOL_END
+	int "Default DHCP pool last host number"
+	depends on HTTPD_DHCP_SERVER
+	range 1 65534
+	default 199
+
 config WGET_HTTPS
 	bool "wget https"
 	depends on CMD_WGET

@@ -490,12 +490,18 @@ const char *bootdelay_process(void)
 	return s;
 }
 
+__weak void board_autoboot_fail(void)
+{
+}
+
 void autoboot_command(const char *s)
 {
 	debug("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 
-	if (s && (stored_bootdelay == -2 ||
-		 (stored_bootdelay != -1 && !abortboot(stored_bootdelay)))) {
+	if ((!s || !*s))
+		board_autoboot_fail();
+	else if (stored_bootdelay == -2 ||
+		 (stored_bootdelay != -1 && !abortboot(stored_bootdelay))) {
 		bool lock;
 		int prev;
 
@@ -504,7 +510,8 @@ void autoboot_command(const char *s)
 		if (lock)
 			prev = disable_ctrlc(1); /* disable Ctrl-C checking */
 
-		run_command_list(s, -1, 0);
+		if (run_command_list(s, -1, 0))
+			board_autoboot_fail();
 
 		if (lock)
 			disable_ctrlc(prev);	/* restore Ctrl-C checking */
