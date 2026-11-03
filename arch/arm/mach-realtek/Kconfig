@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+if ARCH_REALTEK
+
+config SYS_SOC
+	default "realtek"
+
+config SYS_CONFIG_NAME
+	default "rtl9617c"
+
+source "arch/arm/mach-realtek/rtl9617c/Kconfig"
+
+endif

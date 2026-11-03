@@ -98,12 +98,17 @@ machine-$(CONFIG_ARCH_VERSAL_NET)	+= versal-net
 machine-$(CONFIG_ARCH_ZYNQ)		+= zynq
 machine-$(CONFIG_ARCH_ZYNQMP)		+= zynqmp
 machine-$(CONFIG_ARCH_ZYNQMP_R5)	+= zynqmp-r5
+machine-$(CONFIG_ARCH_REALTEK)		+= realtek
 
 machine-$(CONFIG_MACH_IMX)		+= imx
 
 machdirs := $(patsubst %,arch/arm/mach-%/,$(machine-y))
 
 PLATFORM_CPPFLAGS += $(patsubst %,-I$(srctree)/%include,$(machdirs))
+
+ifeq ($(CONFIG_ARCH_REALTEK),y)
+PLATFORM_CPPFLAGS += -I$(srctree)/board/realtek
+endif
 
 libs-y += $(machdirs)
 

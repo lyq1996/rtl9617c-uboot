@@ -2202,6 +2202,15 @@ config ARCH_GXP
 	select OF_CONTROL
 	imply CMD_DM
 
+config ARCH_REALTEK
+	bool "Realtek SoCs"
+	select DM
+	select OF_CONTROL
+	help
+	  Support for the Realtek RTL9617C SoC family. The RTL9617C is a
+	  64-bit ARM SoC with the NI Ethernet MAC, a SPI NAND controller,
+	  a Cortina UART and a GPIO block.
+
 endchoice
 
 config SUPPORT_PASSING_ATAGS
@@ -2414,6 +2423,8 @@ source "arch/arm/mach-nexell/Kconfig"
 
 source "arch/arm/mach-npcm/Kconfig"
 
+source "arch/arm/mach-realtek/Kconfig"
+
 source "board/armltd/total_compute/Kconfig"
 source "board/armltd/corstone1000/Kconfig"
 source "board/bosch/shc/Kconfig"
@@ -2465,7 +2476,6 @@ source "board/phytium/durian/Kconfig"
 source "board/phytium/pomelo/Kconfig"
 source "board/phytium/pe2201/Kconfig"
 source "board/xen/xenguest_arm64/Kconfig"
-
 source "arch/arm/Kconfig.debug"
 
 endmenu

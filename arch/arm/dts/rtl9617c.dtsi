@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Realtek RTL9617C SoC
+ *
+ * Boards include this and add their own peripherals, aliases and policy.
+ */
+
+/ {
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0 0 0 0x20000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		secure@eeff000 {
+			reg = <0 0x0eeff000 0 0x101000>;
+			no-map;
+		};
+	};
+
+	uart0: serial@f43291b0 {
+		compatible = "cortina,ca-uart";
+		reg = <0 0xf43291b0 0 0x30>;
+		clock-frequency = <125000000>;
+		bootph-all;
+	};
+
+	/*
+	 * The SPI NAND controller is not a bus master in this U-Boot: the
+	 * driver registers the flash with the MTD layer itself and only needs
+	 * the node to find the partition table below it.
+	 */
+	spi_nand: spi-nand {
+		compatible = "realtek,rtl9617c-spinand";
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+
+	gpio0: gpio@f43292c0 {
+		compatible = "cortina,ca-gpio";
+		reg = <0 0xf43292c0 0 0xb4>, <0 0xf4320100 0 0x14>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <160>;
+	};
+
+	eth: ethernet@f4300000 {
+		compatible = "realtek,rtl9617c-ni";
+		reg = <0 0xf4320000 0 0x400>,
+		      <0 0xf4329118 0 0x10>,
+		      <0 0xf4304000 0 0x1000>;
+		rx-mode = <1>;
+	};
+};
