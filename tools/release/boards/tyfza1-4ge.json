@@ -1,0 +1,29 @@
+{
+  "board": "tyfza1-4ge",
+  "board_id": "TYFZA1-4GE",
+  "defconfig": "tyfza1-4ge_defconfig",
+  "bl33_budget": 466854,
+  "stock_sha256": "f68abf8a9bfcd89cf34409c27e932f8964e39217dadd394546286ce62b9dd689",
+  "layout": {
+    "boot_size": 2097152,
+    "fip_slot_offsets": [
+      262144,
+      1048576
+    ],
+    "fip_slot_capacity": 786432,
+    "toc_magic_hex": "010064aa78563412",
+    "toc_header_size": 16,
+    "toc_entry_size": 40
+  },
+  "fip_uuids": {
+    "tb_fw": "0becf95f-224d-4d3e-a544-c39d81c73f0a",
+    "soc_fw": "6d08d447-fe4c-4698-9b95-2950cbbd5a00",
+    "nt_fw": "a7eed0d6-eafc-4bd5-9782-9934f234b6e4",
+    "trusted_key_cert": "90e87e82-60f8-11e4-a1b4-777a21b4f94c",
+    "soc_fw_key_cert": "ccbeb88a-60f9-11e4-9ad0-eb4822d8dcf8",
+    "nt_fw_key_cert": "2a83d58a-60fb-11e4-8aaf-df30bbc49859",
+    "tb_fw_cert": "ea69e2d6-635d-11e4-8d8c-9fbabe9956a5",
+    "soc_fw_cert": "200cb2e2-635e-11e4-9ce8-abccf92bb666",
+    "nt_fw_cert": "f3c1c48e-635d-11e4-a7a9-87ee40b23fa7"
+  }
+}
