@@ -41,6 +41,10 @@
 
 #define IH_INITRD_ARCH IH_ARCH_DEFAULT
 
+#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+#define PT1500_KERNEL_AREA	SZ_32M
+#endif
+
 #ifndef USE_HOSTCC
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -467,6 +471,28 @@ static int check_overlap(const char *name, ulong base, ulong end,
 	return 0;
 }
 
+#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+static void pt1500_move_fdt_off_kernel(ulong img_addr)
+{
+	ulong fdt = map_to_sysmem(images.ft_addr);
+	ulong top = max(images.rd_end, fdt + images.ft_len);
+	void *buf = map_sysmem(img_addr, 0);
+
+	if (!images.ft_addr || !images.ft_len ||
+	    fdt >= images.os.load + PT1500_KERNEL_AREA ||
+	    fdt + images.ft_len <= images.os.load)
+		return;
+	if (genimg_get_format(buf) == IMAGE_FORMAT_FIT)
+		top = max(top, img_addr + fdt_totalsize(buf));
+	top = ALIGN(top, SZ_4K);
+	if (top + images.ft_len > gd->ram_top)
+		return;
+	memmove(map_sysmem(top, images.ft_len), images.ft_addr,
+		images.ft_len);
+	images.ft_addr = map_sysmem(top, images.ft_len);
+}
+#endif
+
 int bootm_find_images(ulong img_addr, const char *conf_ramdisk,
 		      const char *conf_fdt, ulong start, ulong size)
 {
@@ -509,6 +535,10 @@ int bootm_find_images(ulong img_addr, const char *conf_ramdisk,
 			puts("Could not find a valid device tree\n");
 			return 1;
 		}
+
+#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+		pt1500_move_fdt_off_kernel(img_addr);
+#endif
 
 		/* check if FDT overlaps OS image */
 		if (check_overlap("FDT", map_to_sysmem(images.ft_addr),

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0+
+if TARGET_YHUP_PT1500_H10_2P5G
+config SYS_BOARD
+	default "pt1500_h10"
+config SYS_VENDOR
+	default "yhup"
+endif

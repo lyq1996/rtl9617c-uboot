@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include "rtl9617c.dtsi"
+
+/ {
+	model = "Youhua PT1500-H10 2.5G";
+	compatible = "youhua,pt1500-h10-2p5g", "realtek,rtl9617c";
+
+	aliases {
+		serial0 = &uart0;
+		ethernet0 = &eth;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
+
+/*
+ * Flash layout: the platform firmware, one environment block, and a single
+ * UBI device for everything else. The controller base is fixed in the
+ * driver, so the node carries no reg.
+ */
+&spi_nand {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot@0 {
+			label = "boot";
+			reg = <0x0 0x200000>;
+		};
+
+		/*
+		 * Everything from 0x200000 on is the vendor layout, untouched: the
+		 * kernel's device tree has no partitions of its own, so the table in
+		 * the command line and these offsets have to agree exactly.
+		 */
+		/* 0x200000-0x280000: unowned, as the vendor left it. */
+		env@280000 {
+			label = "env";
+			reg = <0x280000 0x40000>;
+		};
+
+		env2@2c0000 {
+			label = "env2";
+			reg = <0x2c0000 0x40000>;
+		};
+
+		static_conf@300000 {
+			label = "static_conf";
+			reg = <0x300000 0x40000>;
+		};
+
+		ubi_device@340000 {
+			label = "ubi_device";
+			reg = <0x340000 0xf5c0000>;
+		};
+	};
+};
+
+&eth {
+	p0-phy-config = <1 0>;
+	p1-phy-config = <2 0>;
+	p2-phy-config = <3 0>;
+	p3-phy-config = <4 0>;
+};
