@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>rtl9617c恢复模式</title>
+<script>(function(){var v=localStorage.getItem('rtk_theme')||'auto';var d=v==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:v==='dark';document.documentElement.dataset.theme=d?'dark':'light'})()</script>
+<style>
+:root{color-scheme:light;
+--bg:#eef2f8;--panel:#fbfcff;--panel-2:#f4f7fb;--panel-strong:#fff;--panel-rgb:251,252,255;
+--text:#0f172a;--muted:#64748b;--border:rgba(15,23,42,.10);--border-strong:rgba(15,23,42,.16);
+--primary:#2563eb;--primary-2:#38bdf8;--primary-rgb:37,99,235;
+--danger-rgb:220,38,38;--success:#16a34a;
+--warn-bg:rgba(245,158,11,.10);--warn-border:rgba(245,158,11,.30);
+--err-bg:rgba(220,38,38,.08);--err-border:rgba(220,38,38,.30);
+--shadow-sm:0 1px 2px rgba(15,23,42,.05),0 1px 0 rgba(255,255,255,.8) inset;
+--shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.06),0 24px 56px rgba(15,23,42,.08),0 1px 0 rgba(255,255,255,.85) inset;
+--focus-ring:0 0 0 2px var(--panel),0 0 0 4px rgba(var(--primary-rgb),.42);
+--inset-highlight:rgba(255,255,255,.72);
+--radius-sm:10px;--radius:14px;--radius-lg:20px;--card-w:780px;--sidebar-w:272px;
+--sp-xs:4px;--sp-sm:8px;--sp-md:14px;--sp-lg:24px;--sp-xl:36px;
+--ease-out:cubic-bezier(.16,1,.3,1);--anim-fast:160ms;--anim:240ms;
+--font-sans:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+--font-mono:ui-monospace,SFMono-Regular,"Cascadia Code",Menlo,Consolas,monospace}
+html[data-theme="dark"]{color-scheme:dark;
+--bg:#070b16;--panel:#0f172a;--panel-2:#131c30;--panel-strong:#1a2540;--panel-rgb:15,23,42;
+--text:#e6edf7;--muted:#94a3b8;--border:rgba(148,163,184,.14);--border-strong:rgba(148,163,184,.24);
+--primary:#60a5fa;--primary-2:#22d3ee;--primary-rgb:96,165,250;
+--danger-rgb:248,113,113;--success:#4ade80;
+--warn-bg:rgba(245,158,11,.08);--warn-border:rgba(245,158,11,.30);
+--err-bg:rgba(248,113,113,.08);--err-border:rgba(248,113,113,.30);
+--shadow-sm:0 1px 2px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.04) inset;
+--shadow:0 1px 2px rgba(0,0,0,.2),0 10px 28px rgba(0,0,0,.3),0 28px 64px rgba(0,0,0,.38),0 1px 0 rgba(255,255,255,.05) inset;
+--inset-highlight:rgba(255,255,255,.05)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 var(--font-sans)}
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;padding:var(--sp-md) var(--sp-sm);border-right:1px solid var(--border);
+background:linear-gradient(180deg,rgba(var(--panel-rgb),.84) 0%,rgba(var(--panel-rgb),.72) 100%);
+box-shadow:var(--shadow-sm);display:flex;flex-direction:column;overflow:hidden;z-index:10}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:9px 12px var(--sp-md);border-bottom:1px solid var(--border)}
+.sidebar-brand .logo{width:28px;height:28px;flex-shrink:0;color:var(--primary)}
+.sidebar-brand .title{font-weight:800;font-size:1.05rem;letter-spacing:-.01em;color:var(--text)}
+.sidebar-brand .title small{display:block;font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.05em}
+.sidebar-controls{display:grid;gap:10px;padding:var(--sp-md) 10px}
+.control-row{display:grid;grid-template-columns:58px 1fr;align-items:center;gap:10px;color:var(--muted);font-size:.8rem;font-weight:600}
+.control-row select{width:100%;padding:8px 30px 8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);
+background:var(--panel);color:var(--text);outline:none;font:inherit;font-size:.82rem;font-weight:500;cursor:pointer;appearance:none;
+background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+background-repeat:no-repeat;background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px}
+.nav{padding:6px 4px 0;flex:1;overflow-y:auto;scrollbar-width:thin}
+.nav-section{margin-top:var(--sp-md)}
+.nav-section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);padding:8px 12px 4px;opacity:.75}
+.nav-link{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:var(--radius-sm);
+color:var(--muted);text-decoration:none;font:inherit;font-size:.9rem;font-weight:600;border:1px solid transparent;background:none;cursor:pointer;text-align:left;overflow:hidden;
+transition:background var(--anim-fast) var(--ease-out),border-color var(--anim-fast) var(--ease-out),color var(--anim-fast) var(--ease-out),transform var(--anim-fast) var(--ease-out)}
+.nav-link::before{content:"";position:absolute;left:0;top:50%;width:3px;height:0;background:linear-gradient(180deg,var(--primary),var(--primary-2));border-radius:0 3px 3px 0;transform:translateY(-50%);transition:height var(--anim) var(--ease-out)}
+.nav-link:hover{background:rgba(var(--primary-rgb),.07);border-color:rgba(var(--primary-rgb),.16);color:var(--text);transform:translateX(2px)}
+.nav-link:hover::before{height:16px}
+.nav-link.active{background:linear-gradient(90deg,rgba(var(--primary-rgb),.14),rgba(var(--primary-rgb),.04) 70%);border-color:rgba(var(--primary-rgb),.22);color:var(--text);box-shadow:0 1px 0 var(--inset-highlight) inset}
+.nav-link.active::before{height:60%}
+.nav-link .dot{width:7px;height:7px;border-radius:999px;background:var(--primary);box-shadow:0 0 0 3px rgba(var(--primary-rgb),.12);opacity:.52;flex-shrink:0;transition:opacity var(--anim-fast)}
+.nav-link.active .dot{opacity:1;box-shadow:0 0 0 4px rgba(var(--primary-rgb),.18)}
+.sidebar-foot{margin-top:auto;padding:10px 12px 4px;font-size:.72rem;color:var(--muted);overflow-wrap:anywhere}
+.main{padding:var(--sp-xl) var(--sp-lg) calc(var(--sbh,96px) + 24px);display:grid;gap:var(--sp-md);align-content:start}
+#m{position:relative;width:100%;max-width:var(--card-w);margin:0 auto;border:1px solid var(--border);
+background:linear-gradient(180deg,rgba(var(--panel-rgb),.92),rgba(var(--panel-rgb),.78)),var(--panel);
+border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;min-height:clamp(360px,calc(100vh - 240px),440px)}
+#m::before{content:"";position:absolute;top:0;right:0;left:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--primary-rgb),.55),rgba(var(--primary-rgb),.2) 60%,transparent);pointer-events:none}
+.card-head{padding:18px 22px 8px;position:relative;z-index:1}
+.card-main{flex:1;display:flex;flex-direction:column;gap:var(--sp-md);padding:var(--sp-md) 22px 18px;position:relative;z-index:1}
+.card-foot{margin-top:auto;padding:0 22px 22px;position:relative;z-index:1}
+.upload-hero{width:48px;height:48px;margin:2px auto 10px;border-radius:50%;display:grid;place-items:center;color:var(--primary);
+background:radial-gradient(circle at 50% 35%,rgba(var(--primary-rgb),.18),transparent 70%),linear-gradient(180deg,rgba(var(--primary-rgb),.1),rgba(var(--primary-rgb),.03));
+border:1px solid rgba(var(--primary-rgb),.22);box-shadow:0 0 0 4px rgba(var(--primary-rgb),.05),0 1px 0 var(--inset-highlight) inset}
+h1{font-weight:800;font-size:1.5rem;line-height:1.25;letter-spacing:-.02em;margin:10px 0 0;text-align:center;color:var(--text)}
+h1::after{content:"";display:block;width:64px;height:3px;margin:10px auto 0;border-radius:999px;background:linear-gradient(90deg,var(--primary),var(--primary-2));box-shadow:0 2px 8px rgba(var(--primary-rgb),.3)}
+#hint{color:var(--muted);font-size:.9rem;line-height:1.55;margin:10px 0 0;text-align:center}
+#hint strong{color:var(--text)}
+h3{font-size:.95rem;margin:0 0 6px;color:var(--text)}
+p{color:var(--muted);line-height:1.55;margin:0}
+.i{border-radius:var(--radius-sm);text-align:left;padding:var(--sp-md) 18px;line-height:1.55;box-shadow:0 1px 0 var(--inset-highlight) inset}
+.i.w{background:var(--warn-bg);border:1px solid var(--warn-border)}
+.i strong{display:block;margin:0 0 6px;color:var(--text)}
+.i ul{margin:0;padding-left:18px;color:var(--muted);font-size:.85rem}
+.i ul li{margin:2px 0}
+.sysinfo{padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+background:linear-gradient(180deg,rgba(var(--primary-rgb),.05),transparent 60%),var(--panel-2);
+color:var(--muted);font-size:.78rem;line-height:1.5;text-align:left;overflow-wrap:anywhere;box-shadow:var(--shadow-sm)}
+.settings-page{display:grid;gap:var(--sp-md)}
+.settings-section{display:grid;gap:10px;padding:var(--sp-md);border:1px solid var(--border);background:var(--panel-2);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.settings-heading{margin:0;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.settings-help{margin:0;font-size:.78rem;color:var(--muted);line-height:1.5;text-align:left}
+.form-row{width:min(520px,100%);margin:6px auto 0;display:grid;gap:10px}
+.form-row-2{grid-template-columns:1fr 1fr}
+.field{display:grid;gap:5px;text-align:left}
+.field label{color:var(--muted);font-size:.78rem;font-weight:600}
+.field-control{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--panel-strong);color:var(--text);outline:none;font:inherit;font-size:.85rem}
+.field-control:focus{border-color:rgba(var(--primary-rgb),.55);box-shadow:var(--focus-ring)}
+.env-grid{display:grid;gap:8px}
+.env-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+.env-row code{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.form-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+input[type="file"]{display:none}
+.file{position:relative;display:flex;align-items:center;gap:10px;width:min(520px,100%);margin:0 auto;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel-strong);cursor:pointer;transition:border-color var(--anim-fast)}
+.file:hover{border-color:var(--border-strong)}
+.file b{font-weight:600;white-space:nowrap;padding:5px 12px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;color:var(--text);background:var(--panel-2)}
+.file span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.85rem}
+input[type="text"]{font:inherit;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--panel-strong);color:var(--text);outline:none}
+input[type="text"]:focus{border-color:rgba(var(--primary-rgb),.55);box-shadow:var(--focus-ring)}
+button.button{appearance:none;position:relative;margin:6px 0;border:1px solid rgba(var(--primary-rgb),.4);
+background:linear-gradient(180deg,rgba(var(--primary-rgb),1) 0%,rgba(var(--primary-rgb),.82) 100%);
+color:#fff;border-radius:var(--radius);padding:10px 22px;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;letter-spacing:.01em;overflow:hidden;
+box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 -1px 0 rgba(0,0,0,.1) inset,0 4px 10px rgba(var(--primary-rgb),.2),0 12px 28px rgba(var(--primary-rgb),.18);
+transition:transform var(--anim-fast) var(--ease-out),filter var(--anim-fast),box-shadow var(--anim)}
+button.button:hover{filter:brightness(1.07);transform:translateY(-1px)}
+button.button.button-danger{border-color:rgba(220,38,38,.46);background:linear-gradient(180deg,rgba(239,68,68,.98) 0%,rgba(185,28,28,.86) 100%);box-shadow:0 1px 0 rgba(255,255,255,.26) inset,0 -1px 0 rgba(0,0,0,.12) inset,0 4px 12px rgba(var(--danger-rgb),.22),0 12px 28px rgba(var(--danger-rgb),.24)}
+button.button.plain{border-color:var(--border-strong);background:var(--panel-strong);color:var(--text);box-shadow:var(--shadow-sm)}
+button:disabled,input:disabled,select:disabled{opacity:.5;cursor:default;filter:none;transform:none}
+.bar{--percent:0;height:12px;width:min(520px,100%);background-color:rgba(100,116,139,.14);border:1px solid var(--border);border-radius:999px;margin:0 auto;overflow:hidden;position:relative;box-shadow:0 1px 2px rgba(15,23,42,.08) inset}
+.bar::before{content:"";display:block;width:calc(1% * var(--percent));height:100%;border-radius:999px;
+background:linear-gradient(180deg,rgba(255,255,255,.3),transparent 60%),linear-gradient(90deg,var(--primary),var(--primary-2));
+box-shadow:0 0 12px rgba(var(--primary-rgb),.35);transition:width var(--anim) var(--ease-out)}
+.bar-text{font-size:.82rem;font-weight:600;color:var(--primary);text-align:center;margin-top:4px;font-variant-numeric:tabular-nums}
+.console-card{width:100%}
+.termlike{background:#0a0f1a;color:#d6deea;border:1px solid rgba(148,163,184,.18);border-radius:var(--radius-sm);font-family:var(--font-mono);text-align:left;scrollbar-width:thin;white-space:pre-wrap;word-break:break-word}
+.console-output{height:300px;overflow:auto;font-size:.75rem;line-height:1.55;padding:14px}
+.console-toolbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+.console-toolbar input{flex:1;min-width:0}
+.state-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:middle}
+.dialog-mask{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.45)}
+.dialog{width:min(420px,100%);padding:16px 18px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--panel);box-shadow:var(--shadow)}
+.dialog p{margin:0 0 12px;font-size:.88rem;line-height:1.6;color:var(--text);overflow-wrap:anywhere}
+.dialog input{width:100%;box-sizing:border-box}
+.table-wrap{width:100%;overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--panel-strong);box-shadow:var(--shadow-sm)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th,td{padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:600;background:var(--panel-2)}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.statusbar{position:fixed;bottom:0;left:var(--sidebar-w);right:0;background:linear-gradient(180deg,rgba(var(--panel-rgb),.94),rgba(var(--panel-rgb),.88));border-top:1px solid var(--border);
+backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:10px var(--sp-lg) 12px;z-index:20}
+.statusbar .inner{width:100%;max-width:var(--card-w);margin:0 auto}
+.statusbar .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#state{font-weight:700;font-size:.9rem}
+#transfer{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.8rem}
+button.mini{border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-strong);color:var(--text);font:inherit;font-size:.78rem;padding:5px 12px;cursor:pointer}
+.logpanel{margin-top:8px;border-top:1px dashed var(--border);padding-top:6px}
+.log-head{display:flex;gap:10px;align-items:center}
+#logLatest{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem;color:var(--muted)}
+.log-body{margin:6px 0 0;padding:10px 14px;font-size:.74rem;line-height:1.6;max-height:200px;overflow:auto}
+.log-body .err{color:#f87171}
+.log-body .ok{color:#4ade80}
+.log-body .head{color:#7dd3fc;font-weight:600}
+[hidden]{display:none!important}
+@media(max-width:860px){
+.app{grid-template-columns:1fr}
+.sidebar{position:static;height:auto}
+.nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px;padding:6px 8px}
+.nav-section{margin-top:6px}
+.sidebar-foot{display:none}
+.main{padding:var(--sp-lg) 12px calc(var(--sbh,96px) + 24px)}
+.statusbar{left:0}
+.form-row-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body><div class="app">
+<aside class="sidebar">
+<div class="sidebar-brand">
+<svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="15" x2="4" y2="15"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="15" x2="23" y2="15"></line></svg>
+<div class="title">rtl9617c恢复模式<small>U-Boot WEBUI</small></div>
+</div>
+<div class="sidebar-controls">
+<div class="control-row"><div>🌓 主题</div><select id="theme_select"><option value="auto">自动</option><option value="light">浅色</option><option value="dark">深色</option></select></div>
+</div>
+<nav class="nav" id="nav">
+<div class="nav-section">
+<div class="nav-section-title">基础功能</div>
+<button class="nav-link active" data-sec="firmware"><span class="dot"></span><span>固件升级</span></button>
+<button class="nav-link" data-sec="uboot"><span class="dot"></span><span>更新 U-Boot</span></button>
+</div>
+<div class="nav-section">
+<div class="nav-section-title">高级功能</div>
+<button class="nav-link" data-sec="ubi"><span class="dot"></span><span>UBI 管理</span></button>
+<button class="nav-link" data-sec="backup"><span class="dot"></span><span>分区备份</span></button>
+<button class="nav-link" data-sec="volumes"><span class="dot"></span><span>Factory</span></button>
+<button class="nav-link" data-sec="flash"><span class="dot"></span><span>闪存管理</span></button>
+<button class="nav-link" data-sec="env"><span class="dot"></span><span>环境变量</span></button>
+<button class="nav-link" data-sec="console"><span class="dot"></span><span>网页终端</span></button>
+</div>
+<div class="nav-section">
+<div class="nav-section-title">系统</div>
+<button class="nav-link" data-sec="system"><span class="dot"></span><span>启动与重启</span></button>
+</div>
+</nav>
+<div class="sidebar-foot" id="sideVersion">—</div>
+</aside>
+<div class="main">
+<div id="m">
+
+<section id="sec-firmware">
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="8" y1="4" x2="8" y2="1"></line><line x1="16" y1="4" x2="16" y2="1"></line><line x1="8" y1="20" x2="8" y2="23"></line><line x1="16" y1="20" x2="16" y2="23"></line><line x1="1" y1="8" x2="4" y2="8"></line><line x1="1" y1="16" x2="4" y2="16"></line><line x1="20" y1="8" x2="23" y2="8"></line><line x1="20" y1="16" x2="23" y2="16"></line></svg></div>
+<h1>固件升级</h1>
+</div>
+<div class="card-main">
+<div class="sysinfo" id="deviceInfo">正在读取设备信息…</div>
+<div class="i w"><strong>首次安装</strong>
+<ul><li>重建 UBI → 在「Factory」导入 <span data-dev="factory"></span> 镜像 → 在「环境变量」恢复默认  → 回到这里刷写</li></ul></div>
+<div class="settings-page"><div class="settings-section">
+<h3 class="settings-heading">FIT镜像</h3>
+<p class="settings-help">镜像边上传边写入 <span data-dev="fit"></span> 卷，写完回读校验，大小不受内存限制。</p>
+<label class="file"><input id="firmwareFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
+</div></div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>刷写会清空旧的系统与配置数据</li><li>更新期间请勿断电，完成后在「启动与重启」启动系统</li><li>固件必须与本机机型匹配</li></ul></div></div>
+</section>
+
+<section id="sec-uboot" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg></div>
+<h1>更新 U-Boot</h1>
+</div>
+<div class="card-main">
+<div class="settings-page"><div class="settings-section">
+<h3 class="settings-heading">mtd0镜像</h3>
+<div class="i w"><strong>提示</strong>
+<ul><li>镜像为完整 <span data-dev="boot"></span>（<span data-dev="boot_bytes"></span>，GPT + fip0 / fip1），镜像中的 GPT 与 BL2 / BL31 必须与本机一致</li><li>依次写入 fip1、fip0、GPT 与保留区，每块写入后回读校验</li></ul></div>
+<label class="file"><input id="ubootFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
+</div></div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>更新期间请勿断电</li><li>引导镜像必须与本机机型匹配</li></ul></div></div>
+</section>
+
+<section id="sec-ubi" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"></rect><path d="M7 2v20M17 2v20M2 12h20M2 7h20M2 17h20"></path></svg></div>
+<h1>UBI 管理</h1>
+<p id="hint">查看 UBI 卷布局，或重建整个 UBI 大分区。</p>
+</div>
+<div class="card-main">
+<div class="settings-page">
+<div class="settings-section">
+<h3 class="settings-heading">UBI 卷</h3>
+<div class="table-wrap" id="ubiTable"><div class="sysinfo">正在读取…</div></div>
+<div class="form-actions"><button id="ubiRefresh" class="button plain">刷新</button><button id="ubiAttach" class="button plain">附加 <span data-dev="ubi_device"></span></button><button id="ubiDetach" class="button plain">分离 <span data-dev="ubi_device"></span></button></div>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">创建 UBI 卷</h3>
+<div class="form-row" style="grid-template-columns:2fr 2fr auto;align-items:end">
+<div class="field"><label for="ubiName">卷名</label><input id="ubiName" class="field-control" maxlength="31" placeholder="rootfs_data"></div>
+<div class="field"><label for="ubiSize">大小（MB，0=剩余全部）</label><input id="ubiSize" class="field-control" type="number" min="0" value="0"></div>
+<div class="field"><label for="ubiDynamic" class="settings-help" style="display:flex;align-items:center;gap:6px;margin:0 0 10px;white-space:nowrap"><input id="ubiDynamic" type="checkbox" checked> 动态卷</label></div>
+</div>
+<div class="form-actions"><button id="ubiCreate" class="button">创建卷</button></div>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">重建 UBI</h3>
+<div class="i w"><ul><li>重建先分离<span data-dev="ubi_device"></span>，再整区擦除并重新附加，仅创建空 <span data-dev="factory"></span>（<span data-dev="factory_bytes"></span> static）</li><li>固件卷 <span data-dev="fit"></span> 在安装固件时按镜像大小创建，rootfs_data 在首次启动固件时自动创建</li><li>重建后需重新导入 factory 镜像</li></ul></div>
+<div class="form-actions"><button id="rebuildButton" class="button button-danger">重建 UBI</button></div>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>重建将删除 UBI 内全部数据</li><li>建议先在「分区备份」导出重要卷</li></ul></div></div>
+</section>
+
+<section id="sec-backup" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+<h1>分区备份</h1>
+</div>
+<div class="card-main">
+<div class="settings-page">
+<div class="settings-section">
+<h3 class="settings-heading">导出备份</h3>
+<div class="form-row">
+<div class="field"><label for="backupTarget">备份目标</label><select id="backupTarget" class="field-control"></select></div>
+<p class="settings-help" id="backupHint"></p>
+</div>
+<div class="form-actions"><button id="backupButton" class="button">下载备份</button></div>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>说明</strong>
+<ul><li>备份以单个文件流式下载，设备边读边发</li><li>MTD 备份为物理主数据，坏块填充 FF，不包含 OOB</li><li>整片备份可用于「闪存管理」的整片恢复</li></ul></div></div>
+</section>
+
+<section id="sec-volumes" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
+<h1>Factory</h1>
+</div>
+<div class="card-main">
+<div class="settings-page" id="boardDataList"><div class="sysinfo">正在读取…</div></div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>镜像必须与本机机型匹配，大小必须与定义完全一致</li><li>错误的 factory 镜像可能导致设备无法注册上网</li></ul></div></div>
+</section>
+
+<section id="sec-flash" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg></div>
+<h1>闪存管理</h1>
+</div>
+<div class="card-main">
+<div class="settings-page">
+<div class="settings-section">
+<h3 class="settings-heading">写入分区</h3>
+<p class="settings-help">向 UBI 卷或 MTD 分区写入镜像，无内容校验，请确认目标。</p>
+<div class="form-row"><div class="field"><label for="writeTarget">目标</label><select id="writeTarget" class="field-control"></select></div></div>
+<label class="file"><input id="partitionFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">整片恢复</h3>
+<p class="settings-help">从偏移 0 恢复完整nand数据，引导区最后写入。文件大小必须与 Flash 容量一致。</p>
+<label class="file"><input id="allFlashFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">清除坏块标记</h3>
+<p class="settings-help">擦除整片 NAND（包括出厂坏块标记），所有数据将丢失。</p>
+<div class="form-actions"><button id="scrubButton" class="button button-danger">清除坏块标记</button></div>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>写入与恢复操作直接修改 Flash 内容，请确认目标</li><li>整片恢复文件必须来自本机的完整备份</li></ul></div></div>
+</section>
+
+<section id="sec-env" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+<h1>环境变量</h1>
+</div>
+<div class="card-main">
+<div class="settings-page">
+<div class="settings-section">
+<h3 class="settings-heading">恢复服务与网络</h3>
+<div class="env-grid" id="envGrid"></div>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">高级</h3>
+<div class="form-row form-row-2">
+<div class="field"><label for="envName">变量名</label><input id="envName" class="field-control" type="text" placeholder="例如 serverip" autocomplete="off" spellcheck="false"></div>
+<div class="field"><label for="envValue">值</label><input id="envValue" class="field-control" type="text" placeholder="留空表示删除" autocomplete="off" spellcheck="false"></div>
+</div>
+<div class="form-actions"><button id="envDefault" class="button button-danger">恢复默认</button><button id="envButton" class="button">保存修改</button></div>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>说明</strong>
+<ul><li>关闭 DHCP（httpd_dhcp=0）时，需先设置 httpd_ipaddr 才能访问本页面</li></ul></div></div>
+</section>
+
+<section id="sec-console" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg></div>
+<h1>网页终端</h1>
+</div>
+<div class="card-main">
+<div class="console-card">
+<div class="console-output termlike" id="consoleLog"></div>
+<div class="console-toolbar">
+<input id="command" class="field-control" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="输入命令，例如 mtd list">
+<button id="commandButton" class="button">执行</button>
+</div>
+<div class="console-toolbar">
+<button id="consoleClear" class="button plain">清空</button>
+<button data-action="exit" class="button plain">返回串口</button>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>警告</strong>
+<ul><li>此终端拥有 root 级权限，可执行任意命令</li><li>请勿在不可信网络中使用</li></ul></div></div>
+</section>
+
+<section id="sec-system" hidden>
+<div class="card-head">
+<div class="upload-hero"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg></div>
+<h1>启动与重启</h1>
+</div>
+<div class="card-main">
+<div class="settings-page">
+<div class="settings-section">
+<h3 class="settings-heading">启动系统</h3>
+<p class="settings-help">从 UBI 的 <span data-dev="fit"></span> 卷读取固件并启动。</p>
+<div class="form-actions"><button data-action="boot" class="button">启动系统</button></div>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">启动切换</h3>
+<div class="sysinfo" id="bootState">正在读取启动状态…</div>
+<div class="i w"><strong>如何切换启动到原厂固件？</strong>
+<ul><li>转至闪存管理页面，写入 env、env2、<span data-dev="ubi_device"></span> 分区原厂备份，重启即可启动至原厂固件。</li></ul></div>
+<div class="i w"><strong>如何切换启动到自定义固件？</strong>
+<ul><li>环境变量页面，恢复默认env</li><li>UBI 管理页面，重建 UBI</li><li>Factory 页面，导入 Factory 镜像</li><li>固件升级页面，刷入自定义固件</li><li>重启即可启动至自定义固件</li></ul></div>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">内存启动</h3>
+<p class="settings-help">上传 FIT 镜像直接从内存启动，不写入 Flash；镜像大小受设备可用内存限制。</p>
+<label class="file"><input id="initramfsFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
+</div>
+<div class="settings-section">
+<h3 class="settings-heading">重启设备</h3>
+<p class="settings-help">重启后按住 reset 键可再次进入 rtl9617c恢复模式。</p>
+<div class="form-actions"><button data-action="reset" class="button plain">重启</button></div>
+</div>
+</div>
+</div>
+<div class="card-foot"><div class="i w"><strong>说明</strong>
+<ul><li>内存启动适合验证新固件，不改动 Flash</li><li>启动系统后本页面将不可用</li></ul></div></div>
+</section>
+
+</div>
+</div>
+<div class="statusbar"><div class="inner">
+<div class="top"><span id="state">—</span><span id="transfer"></span><button id="cancel" class="mini" hidden>取消</button></div>
+<div class="bar" id="progressBar" style="display:none"></div>
+<span class="bar-text" id="barText"></span>
+<div class="logpanel">
+<div class="log-head"><button id="logToggle" class="mini plain">日志 ▸</button><span id="logLatest"></span><button id="logClear" class="mini plain">清空</button></div>
+<div class="log-body termlike" id="output" hidden></div>
+</div>
+</div></div>
+</div>
+<script>
+'use strict';
+const PROTOCOL=3;
+const PHASE={erase:'擦除中',write:'写入中',verify:'校验中'};
+let INFO={names:{},limits:{},board:{},mtd:[],board_data:[]};
+let STATUS={busy:false,job:{},write:{},backup:{},ubi:{attached:false,volumes:[]},log:{}};
+let localBusy=false,rebooting=false,activeXHR=null,cancelled=false,activeWrite=0,uploaded=null,upStart=0;
+let logGen=-1,logPos=0,logPre=null,jobText='',targetsKey='';
+const el=id=>document.getElementById(id),text=(id,v)=>{el(id).textContent=v};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function bytes(n){return n>=1048576?(n/1048576).toFixed(1)+' MiB':n>=1024?(n/1024).toFixed(1)+' KiB':n+' B'}
+function name(k,f){return (INFO.names&&INFO.names[k])||f}
+function limit(k,f){return (INFO.limits&&INFO.limits[k])||f}
+function factory(){const d=INFO.board_data||[];return d.length?d[0]:{name:'factory',size:0}}
+const DEV_TEXT={fit:()=>name('fit','fit'),boot:()=>name('boot','boot'),ubi_device:()=>name('ubi','ubi_device'),
+ factory:()=>factory().name,boot_bytes:()=>bytes(limit('boot_bytes',0)),factory_bytes:()=>bytes(factory().size)};
+function applyDevice(){document.querySelectorAll('[data-dev]').forEach(e=>{const f=DEV_TEXT[e.dataset.dev];if(f)e.textContent=f()})}
+/* ── 日志 ── */
+function logScroll(body){if(body.scrollHeight-body.scrollTop-body.clientHeight<48)body.scrollTop=body.scrollHeight}
+function logLine(msg,cls){
+ const body=el('output'),line=document.createElement('div');
+ if(cls)line.className=cls;
+ line.textContent='['+new Date().toTimeString().slice(0,8)+'] '+msg;
+ body.append(line);logPre=null;text('logLatest',msg);
+ if(!body.hidden)logScroll(body);
+}
+function logText(t){
+ if(!t)return;
+ const body=el('output');
+ if(!logPre){
+  const head=document.createElement('div');head.className='head';
+  head.textContent='['+new Date().toTimeString().slice(0,8)+'] 设备输出';
+  logPre=document.createElement('div');body.append(head,logPre);
+ }
+ logPre.textContent+=t;jobText+=t;
+ const lines=logPre.textContent.trim().split('\n');text('logLatest',lines[lines.length-1]);
+ if(!body.hidden)logScroll(body);
+}
+let pulling=Promise.resolve();
+function pullLog(){const p=pulling.then(pullLogNow);pulling=p.catch(()=>{});return p}
+async function pullLogNow(){
+ for(let i=0;i<64;i++){
+  const st=STATUS.log||{};
+  if(st.gen!==logGen){logGen=st.gen;logPos=0;logPre=null;jobText=''}
+  if(logPos>=(st.len||0))return;
+  const r=await api('GET','/api/log?from='+logPos);
+  if(r.gen!==logGen){STATUS.log={gen:r.gen,len:r.len};continue}
+  logText(r.text);logPos=r.next;
+  if(r.cut&&logPos>=r.len)logLine('设备日志超过上限，已截断','err');
+ }
+}
+/* ── 主题与导航 ── */
+function applyTheme(v){
+ const dark=v==='auto'?matchMedia('(prefers-color-scheme: dark)').matches:v==='dark';
+ document.documentElement.dataset.theme=dark?'dark':'light';
+ localStorage.setItem('rtk_theme',v);
+}
+el('theme_select').onchange=e=>applyTheme(e.target.value);
+el('theme_select').value=localStorage.getItem('rtk_theme')||'auto';
+applyTheme(el('theme_select').value);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if((localStorage.getItem('rtk_theme')||'auto')==='auto')applyTheme('auto')});
+function sec(n){
+ document.querySelectorAll('#nav .nav-link').forEach(b=>b.classList.toggle('active',b.dataset.sec===n));
+ document.querySelectorAll('#m>section').forEach(s=>{s.hidden=s.id!=='sec-'+n});
+}
+document.querySelectorAll('#nav .nav-link').forEach(b=>b.onclick=()=>sec(b.dataset.sec));
+/* ── 后端协议 ── */
+async function api(method,url,body){
+ const opts={method,cache:'no-store'};
+ if(body!==undefined){opts.headers={'Content-Type':'application/json'};opts.body=JSON.stringify(body)}
+ const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),15000);opts.signal=ac.signal;
+ let r;
+ try{r=await fetch(url,opts)}
+ catch(e){throw new Error(e.name==='AbortError'?'设备响应超时':'连接中断，请检查设备状态')}
+ finally{clearTimeout(timer)}
+ let v={};try{v=await r.json()}catch(e){}
+ if(!r.ok){const err=new Error(v.error||('请求失败（HTTP '+r.status+'）'));err.status=r.status;throw err}
+ return v;
+}
+function showTransfer(done,total){
+ const sec=Math.max(.01,(performance.now()-upStart)/1000);
+ bar(done,total);text('transfer',bytes(done)+' / '+bytes(total)+' · '+bytes(done/sec)+'/s');
+}
+function transfer(url,body,base,total){
+ return new Promise((resolve,reject)=>{
+  const xhr=new XMLHttpRequest();activeXHR=xhr;controls();
+  xhr.open('POST',url);xhr.responseType='json';
+  xhr.upload.onprogress=e=>showTransfer(base+e.loaded,total);
+  const finish=()=>{activeXHR=null;controls()};
+  xhr.onload=()=>{finish();
+   if(xhr.status===200||xhr.status===202){resolve(xhr.response||{});return}
+   const err=new Error((xhr.response&&xhr.response.error)||('请求失败（HTTP '+xhr.status+'）'));err.status=xhr.status;reject(err)};
+  xhr.onerror=()=>{finish();reject(new Error('连接中断，请检查设备状态'))};
+  xhr.onabort=()=>{finish();const e=new Error('传输已取消');e.status=-1;reject(e)};
+  xhr.send(body);
+ });
+}
+async function refreshStatus(){STATUS=await api('GET','/api/status');showStatus();return STATUS}
+async function waitJob(id,opts){
+ opts=opts||{};let misses=0;
+ for(;;){
+  await sleep(opts.fast?200:500);
+  let s;
+  try{s=await refreshStatus();misses=0}
+  catch(e){if(rebooting&&++misses>=3)return {};if(++misses>=40)throw new Error('设备无响应');text('state','等待设备响应');continue}
+  try{await pullLog()}catch(e){}
+  const j=s.job||{};
+  if(j.id===id&&j.state==='done'){if(j.code)throw new Error(j.error||'操作失败');return s}
+  if(j.id>id)throw new Error('设备任务已变化，请刷新页面');
+ }
+}
+async function job(op,args,opts){
+ const r=await api('POST','/api/job',Object.assign({op},args||{}));
+ return r.job?waitJob(r.job,opts):refreshStatus();
+}
+async function upload(op,target,file,opts){
+ opts=opts||{};
+ const o=await api('POST','/api/write',{op,target:target||'',size:file.size});
+ activeWrite=o.id;cancelled=false;
+ try{
+  await waitJob(o.job);
+  upStart=performance.now();
+  for(let off=0;off<file.size;off+=o.chunk){
+   if(cancelled)throw new Error('传输已取消');
+   const part=file.slice(off,Math.min(off+o.chunk,file.size));
+   let r=null;
+   for(let tries=0;!r;tries++){
+    try{r=await transfer('/api/write/'+o.id+'?offset='+off,part,off,file.size)}
+    catch(e){
+     if(e.status||cancelled||tries>=2)throw e;
+     logLine('分段 '+bytes(off)+' 传输中断，重试…','err');await sleep(1000);
+     const s=await refreshStatus();
+     if(s.write.id===o.id&&s.write.next>=off+part.size){r={job:0};break}
+    }
+   }
+   text('state','写入中');
+   uploaded={done:off+part.size,total:file.size};
+   if(r.job)await waitJob(r.job,{fast:true});
+  }
+  uploaded=null;
+  if(opts.beforeCommit)opts.beforeCommit();
+  text('state','校验并提交');
+  const c=await api('POST','/api/job',{op:'write-commit',id:o.id});
+  activeWrite=0;
+  return await waitJob(c.job,opts.commit);
+ }catch(e){
+  uploaded=null;
+  if(activeWrite){const id=activeWrite;activeWrite=0;try{await job('write-abort',{id})}catch(_){}}
+  throw e;
+ }
+}
+/* ── 状态显示 ── */
+function bar(done,total){
+ el('progressBar').style.display='block';
+ el('progressBar').style.setProperty('--percent',total?100*done/total:0);
+ text('barText',total?Math.floor(100*done/total)+'%':'');
+}
+function endTransfer(){el('progressBar').style.display='none';text('barText','');text('transfer','')}
+function showStatus(){
+ const s=STATUS,j=s.job||{},w=s.write||{},b=s.backup||{};
+ if(b.state==='streaming'){bar(b.sent,b.size);text('state','备份下载中');text('transfer',bytes(b.sent)+' / '+bytes(b.size))}
+ else if(uploaded&&j.state==='running'&&!activeXHR){showTransfer(uploaded.done,uploaded.total);text('state',PHASE[j.phase]||'写入中')}
+ else if(j.state==='running'&&j.total&&!activeXHR){bar(j.phase==='verify'?j.total:j.done,j.total);text('state',PHASE[j.phase]||'处理中');text('transfer',bytes(j.done)+' / '+bytes(j.total))}
+ else if(!localBusy){text('state',s.busy?(w.state==='open'||w.state==='failed'?'写入会话未结束':b.state==='ready'?'备份待下载':'设备忙'):'就绪');if(!activeXHR)endTransfer()}
+ renderTargets();ubiTable();controls();
+}
+function controls(){
+ const s=STATUS,stale=!localBusy&&s.busy;
+ document.querySelectorAll('.card-main button,.card-main input,.card-main select').forEach(e=>{e.disabled=localBusy||stale});
+ el('cancel').hidden=!(activeXHR||localBusy||stale);
+}
+el('cancel').onclick=()=>{
+ if(activeXHR){cancelled=true;activeXHR.abort();return}
+ if(localBusy){cancelled=true;return}
+ const w=STATUS.write||{},b=STATUS.backup||{};
+ if(w.state==='open'||w.state==='failed')run(()=>job('write-abort',{id:w.id}));
+ else if(b.state==='ready')run(()=>job('backup-cancel'));
+};
+async function run(fn,opts){
+ opts=opts||{};
+ if(localBusy)return;
+ localBusy=true;rebooting=false;cancelled=false;endTransfer();controls();
+ try{await fn();if(!rebooting){text('state','完成');logLine('✔ 完成','ok')}}
+ catch(e){text('state','操作失败');logLine('✘ '+e.message,'err');if(el('output').hidden)el('logToggle').click()}
+ finally{
+  localBusy=false;endTransfer();
+  if(!rebooting){try{await refreshStatus()}catch(e){}}
+  controls();
+ }
+}
+/* ── 设备信息与目标 ── */
+async function refreshInfo(){
+ INFO=await api('GET','/api/info');
+ if(INFO.protocol!==PROTOCOL)logLine('✘ 页面协议 '+PROTOCOL+' 与设备协议 '+INFO.protocol+' 不一致','err');
+ const bd=INFO.board||{};
+ text('deviceInfo','机型：'+INFO.model+(bd.ports?'（'+bd.ports+'）':'')+' · RAM / Flash：'+bytes(INFO.ram_bytes)+' / '+bytes(INFO.flash_bytes)+' · 可用内存：'+bytes(limit('ram_max',0)));
+ text('sideVersion',(bd.version||INFO.version||'—')+(INFO.version?' · '+INFO.version:''));
+ applyDevice();boardData();targetsKey='';
+}
+function allTargets(){
+ const list=(INFO.mtd||[]).map(v=>({kind:'mtd',name:v.name,size:v.size,whole:v.whole}));
+ const u=STATUS.ubi||{};
+ if(u.attached)(u.volumes||[]).forEach(v=>list.push({kind:'ubi',name:v.name,size:v.size,reserved:v.reserved}));
+ return list;
+}
+const key=v=>v.kind+':'+v.name;
+function pickTarget(id){const k=el(id).value;return allTargets().find(v=>key(v)===k)||null}
+function renderTargets(){
+ const list=allTargets(),sig=JSON.stringify(list);
+ if(sig===targetsKey)return;targetsKey=sig;
+ for(const id of ['backupTarget','writeTarget']){
+  const prev=el(id).value;el(id).replaceChildren();
+  list.forEach(v=>{
+   if(id==='writeTarget'&&(v.whole||(v.kind==='mtd'&&v.name===name('boot','boot'))))return;
+   const o=document.createElement('option');o.value=key(v);
+   o.textContent=(v.whole?'整片 Flash':v.name)+' · '+(v.kind==='ubi'?'UBI':'MTD')+' · '+bytes(v.kind==='ubi'&&id==='writeTarget'?v.reserved:v.size);
+   el(id).appendChild(o);
+  });
+  if([...el(id).options].some(o=>o.value===prev))el(id).value=prev;
+ }
+ hint();
+}
+function hint(){
+ const v=pickTarget('backupTarget');
+ text('backupHint',!v?(STATUS.ubi&&STATUS.ubi.attached?'':'附加 UBI 后可备份 UBI 卷'):v.whole?'整片 Flash 的完整镜像，可用于整片恢复。':
+  v.name===name('fit','fit')?'固件卷（kernel + rootfs FIT）即当前整套固件，备份后可用于重新刷写。':
+  v.kind==='mtd'?'MTD 备份为物理主数据，坏块填充 FF；NAND OOB 不包含在文件中。':'UBI 卷数据。');
+}
+el('backupTarget').onchange=hint;
+const ubiAttached=()=>Boolean(STATUS.ubi&&STATUS.ubi.attached);
+const ubiHint=()=>'UBI 未附加，请先点击「附加 '+name('ubi','ubi_device')+'」';
+function ubiTable(){
+ const wrap=el('ubiTable'),u=STATUS.ubi||{},rows=u.volumes||[];
+ if(!u.attached){wrap.innerHTML='<div class="sysinfo">'+esc(ubiHint())+'。</div>';return}
+ if(!rows.length){wrap.innerHTML='<div class="sysinfo">UBI 内没有卷（剩余 '+bytes(u.free||0)+'）。</div>';return}
+ let html='<table><tr><th>卷名</th><th style="text-align:right">已用 / 容量</th><th>类型</th><th>操作</th></tr>';
+ for(const v of rows){
+  html+='<tr><td>'+esc(v.name)+'</td><td class="num">'+bytes(v.size)+' / '+bytes(v.reserved)+'</td><td>'+(v.dynamic?'动态':'静态')+'</td><td><button class="mini" data-ubi-remove="'+esc(v.name)+'">删除</button> <button class="mini" data-ubi-rename="'+esc(v.name)+'">重命名</button></td></tr>';
+ }
+ wrap.innerHTML=html+'</table><div class="sysinfo">剩余 '+bytes(u.free||0)+'</div>';
+ wrap.querySelectorAll('button').forEach(b=>{b.disabled=localBusy});
+}
+/* ── 文件与确认 ── */
+function bindFileName(input){
+ const label=input.closest('label.file'),span=label&&label.querySelector('span');
+ if(span)input.addEventListener('change',()=>{span.textContent=input.files[0]?input.files[0].name:'未选择文件'});
+}
+function fileField(input){
+ const label=document.createElement('label'),b=document.createElement('b'),span=document.createElement('span');
+ label.className='file';b.textContent='选择文件';span.textContent='未选择文件';
+ label.append(input,b,span);bindFileName(input);return label;
+}
+function ask(message,preset){
+ return new Promise(resolve=>{
+  const mask=document.createElement('div');mask.className='dialog-mask';
+  const box=document.createElement('div');box.className='dialog';
+  const msg=document.createElement('p');msg.textContent=message;
+  const actions=document.createElement('div');actions.className='form-actions';
+  const ok=document.createElement('button');ok.className='button button-danger';ok.textContent='确定';
+  const no=document.createElement('button');no.className='button plain';no.textContent='取消';
+  const input=preset===undefined?null:document.createElement('input');
+  const done=v=>{mask.remove();resolve(v)};
+  actions.append(ok,no);box.append(msg);
+  if(input){input.className='field-control';input.type='text';input.value=preset;box.append(input)}
+  box.append(actions);mask.append(box);document.body.append(mask);
+  ok.onclick=()=>done(input?(input.value.trim()||null):true);
+  no.onclick=()=>done(input?null:false);
+  mask.onclick=ev=>{if(ev.target===mask)done(input?null:false)};
+  (input||ok).focus();
+ });
+}
+/* 在文件框后挂一个执行按钮：校验 → 确认 → 上传并写入 */
+function mountFlow(input,label,opts){
+ const host=input.closest('.file').parentElement;
+ const row=document.createElement('div');row.className='form-actions';
+ const go=document.createElement('button');go.className='button button-danger';go.textContent=label;
+ row.append(go);host.append(row);
+ go.onclick=()=>run(async()=>{
+  const file=input.files[0];if(!file)throw new Error('请选择文件');
+  if(opts.validate)opts.validate(file);
+  if(!await ask(label+'：'+file.name+'（'+bytes(file.size)+'），确定继续？'))return;
+  await opts.go(file);
+  if(opts.after)await opts.after();
+ });
+}
+function needRam(file){
+ const room=limit('ram_max',0);
+ if(room&&file.size>room)throw new Error('文件（'+bytes(file.size)+'）超过设备当前可用内存 '+bytes(room));
+}
+/* ── 各页面 ── */
+mountFlow(el('firmwareFile'),'写入固件',{go:file=>upload('firmware','',file)});
+mountFlow(el('ubootFile'),'写入 U-Boot',{
+ validate:file=>{const want=limit('boot_bytes',0);if(file.size!==want)throw new Error('请选择完整 '+name('boot','boot')+' 镜像（'+bytes(want)+'），当前 '+bytes(file.size))},
+ go:file=>upload('uboot','',file)});
+mountFlow(el('partitionFile'),'写入目标分区',{
+ validate:file=>{
+  const v=pickTarget('writeTarget');if(!v)throw new Error('请选择目标分区');
+  if(v.kind==='mtd'&&file.size!==v.size)throw new Error('文件大小必须与目标分区一致（'+bytes(v.size)+'）');
+  if(v.kind==='ubi'&&file.size>v.reserved)throw new Error('镜像（'+bytes(file.size)+'）大于卷容量 '+bytes(v.reserved));
+ },
+ go:file=>{const v=pickTarget('writeTarget');return upload(v.kind,v.name,file)},
+ after:refreshInfo});
+mountFlow(el('allFlashFile'),'恢复整片 Flash',{
+ validate:file=>{if(file.size!==INFO.flash_bytes)throw new Error('请选择与 Flash 容量相同的完整主数据备份（'+bytes(INFO.flash_bytes)+'）')},
+ go:file=>upload('nand','',file),after:refreshInfo});
+mountFlow(el('initramfsFile'),'从内存启动',{validate:needRam,
+ go:file=>upload('ram','',file,{beforeCommit:()=>{rebooting=true},commit:{}})});
+function boardData(){
+ const list=el('boardDataList');list.replaceChildren();
+ for(const item of INFO.board_data||[]){
+  const section=document.createElement('div');section.className='settings-section';
+  const heading=document.createElement('h3');heading.className='settings-heading';heading.textContent=item.name+' 镜像';
+  const meta=document.createElement('p');meta.className='settings-help';
+  meta.textContent=(item.name===factory().name?'产线身份与校准数据 · ':'')+'UBI static 卷 · 大小 '+bytes(item.size);
+  const input=document.createElement('input');input.type='file';
+  section.append(heading,meta,fileField(input));list.append(section);
+  mountFlow(input,'写入 '+item.name,{
+   validate:file=>{
+    if(ubiAttached()&&!(STATUS.ubi.volumes||[]).some(v=>v.name===item.name))throw new Error('UBI 中没有 '+item.name+' 卷，请先在「UBI 管理」重建 UBI');
+    if(file.size!==item.size)throw new Error('镜像（'+bytes(file.size)+'）必须与 '+item.name+' 定义大小 '+bytes(item.size)+' 完全一致，请确认 rtl9617c_factory 产出的镜像');
+   },
+   go:file=>upload('factory',item.name,file)});
+ }
+ if(!(INFO.board_data||[]).length)list.innerHTML='<div class="sysinfo">本机没有板级数据卷。</div>';
+}
+el('ubiRefresh').onclick=()=>run(async()=>{await refreshStatus();if(!ubiAttached())throw new Error(ubiHint())});
+el('ubiAttach').onclick=()=>run(()=>job('ubi-attach'));
+el('ubiDetach').onclick=()=>run(async()=>{if(!await ask('分离 UBI 后卷列表不可用，确定？'))return;await job('ubi-detach')});
+el('ubiCreate').onclick=()=>run(async()=>{
+ if(!ubiAttached())throw new Error(ubiHint());
+ const n=el('ubiName').value.trim();if(!n)throw new Error('请输入卷名');
+ const mb=Math.max(0,Number(el('ubiSize').value)||0);
+ await job('ubi-create',{name:n,size:Math.round(mb*1048576),dynamic:el('ubiDynamic').checked?1:0});
+ el('ubiName').value='';el('ubiSize').value='0';
+});
+el('ubiTable').onclick=ev=>{
+ const b=ev.target.closest('button[data-ubi-remove],button[data-ubi-rename]');if(!b)return;
+ run(async()=>{
+  if(b.dataset.ubiRemove){
+   if(!await ask('删除 UBI 卷 '+b.dataset.ubiRemove+'？该卷数据会丢失。'))return;
+   await job('ubi-remove',{name:b.dataset.ubiRemove});
+  }else{
+   const n=await ask('新卷名',b.dataset.ubiRename);if(!n)return;
+   await job('ubi-rename',{name:b.dataset.ubiRename,new_name:n});
+  }
+ });
+};
+el('rebuildButton').onclick=()=>run(async()=>{
+ if(!await ask('重建将分离并整区擦除 '+name('ubi','ubi_device')+'，删除全部数据，确定继续？'))return;
+ await job('ubi-rebuild');
+ await refreshStatus();sec('ubi');
+ if(!ubiAttached())throw new Error(ubiHint());
+});
+el('backupButton').onclick=()=>run(async()=>{
+ const v=pickTarget('backupTarget');if(!v)throw new Error('请选择备份目标');
+ const r=await api('POST','/api/backup',{kind:v.kind,target:v.name});
+ const s=await waitJob(r.job),b=s.backup||{};
+ if(b.state!=='ready')throw new Error('备份未就绪');
+ const a=document.createElement('a');a.href='/api/backup/'+b.id;a.download=b.name;
+ document.body.append(a);a.click();a.remove();
+ logLine('备份开始下载：'+b.name+'（'+bytes(b.size)+'），请在浏览器下载列表查看进度','ok');
+});
+el('scrubButton').onclick=()=>run(async()=>{
+ if(!await ask('此操作将清除所有坏块标记并擦除全部数据！确定继续？'))return;
+ await job('nand-scrub');
+});
+/* ── 环境变量与终端 ── */
+let envSaved={};
+async function envGrid(){
+ try{envSaved=await api('GET','/api/env')}catch(e){envSaved={}}
+ updateBootState();
+ const grid=el('envGrid');grid.replaceChildren();
+ for(const k of Object.keys(envSaved)){
+  const row=document.createElement('div');row.className='env-row';
+  const label=document.createElement('code');label.textContent=k;
+  const input=document.createElement('input');input.className='field-control';input.type='text';
+  input.value=envSaved[k]||'';input.dataset.key=k;input.autocomplete='off';input.spellcheck=false;
+  row.append(label,input);grid.append(row);
+ }
+}
+el('envButton').onclick=()=>run(async()=>{
+ let changed=0;
+ for(const input of el('envGrid').querySelectorAll('input')){
+  const k=input.dataset.key;
+  if((input.value||'')===(envSaved[k]||''))continue;
+  await job('env-set',{name:k,value:input.value});changed++;
+ }
+ const n=el('envName').value.trim();
+ if(n){await job('env-set',{name:n,value:el('envValue').value});changed++;el('envName').value='';el('envValue').value=''}
+ if(!changed)throw new Error('没有需要保存的修改');
+ await envGrid();
+});
+el('envDefault').onclick=()=>run(async()=>{
+ if(!await ask('这将会恢复全部env变量为默认，是否继续'))return;
+ await job('env-default');await envGrid();
+});
+function updateBootState(){
+ const cmd=(envSaved&&envSaved.bootcmd)||'';
+ const dot=document.createElement('span');dot.className='state-dot';
+ let desc;
+ if(cmd==='bootmenu'){dot.style.color='#22c55e';desc='当前: 自定义固件'}
+ else if(/sw_tryactive|boot_by_/.test(cmd)){dot.style.color='#f59e0b';desc='当前: 原厂固件'}
+ else if(!cmd){dot.style.color='#ef4444';desc='当前: 未设置bootcmd(启动失败将进入 Web failsafe)'}
+ else{dot.style.color='#94a3b8';desc='当前: 未知固件 '+cmd.slice(0,60)}
+ el('bootState').replaceChildren(dot,document.createTextNode(desc));
+}
+function consoleLog(t){const log=el('consoleLog');log.textContent+=t;log.scrollTop=log.scrollHeight}
+el('commandButton').onclick=()=>run(async()=>{
+ const cmd=el('command').value.trim();if(!cmd)throw new Error('请输入命令');
+ try{await job('command',{command:cmd})}
+ finally{consoleLog('> '+cmd+'\n'+(jobText.trim()||'(无输出)')+'\n\n');el('command').select()}
+});
+el('command').onkeydown=e=>{if(e.key==='Enter')el('commandButton').click()};
+el('consoleClear').onclick=()=>{el('consoleLog').textContent=''};
+document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>run(async()=>{
+ const op=b.dataset.action;
+ if(op!=='exit'&&!await ask(b.textContent+'后本页面将不可用，确定继续？'))return;
+ rebooting=true;
+ await job(op,{},{});
+ text('state',op==='exit'?'已返回串口，本页面失效；串口执行 rtk_recovery 可再次进入':'设备正在'+b.textContent);
+}));
+el('logToggle').onclick=()=>{
+ const body=el('output');body.hidden=!body.hidden;
+ el('logToggle').textContent=body.hidden?'日志 ▸':'日志 ▾';
+ if(!body.hidden)logScroll(body);
+};
+el('logClear').onclick=()=>{el('output').replaceChildren();logPre=null;el('output').hidden=true;text('logLatest','');el('logToggle').textContent='日志 ▸'};
+document.querySelectorAll('label.file input[type=file]').forEach(bindFileName);
+/* ── 后台状态 ── */
+async function monitor(){
+ if(rebooting)return;
+ if(!localBusy){try{await refreshStatus();await pullLog()}catch(e){text('state','等待设备响应')}}
+ setTimeout(monitor,1500);
+}
+controls();
+(async()=>{
+ try{await refreshInfo();await refreshStatus();await envGrid()}catch(e){logLine('✘ '+e.message,'err')}
+ monitor();
+})();
+const sbBar=document.querySelector('.statusbar');
+new ResizeObserver(()=>document.documentElement.style.setProperty('--sbh',sbBar.offsetHeight+'px')).observe(sbBar);
+</script>
+</body>
+</html>

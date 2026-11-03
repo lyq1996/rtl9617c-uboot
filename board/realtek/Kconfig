@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+config RTK_WEB_FAILSAFE
+	bool "Web failsafe recovery panel"
+	depends on NET_LWIP
+	select CMD_HTTPD
+	select CMD_UBI

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0+
+if TARGET_TIANYI_TYFZA1_2P5G || TARGET_TIANYI_TYFZA1_4GE
+config SYS_BOARD
+	default "tyfza1"
+config SYS_VENDOR
+	default "tianyi"
+endif

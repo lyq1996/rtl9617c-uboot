@@ -1,0 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+
+#include "rtl9617c-tyfza1.dtsi"
+
+/ {
+	model = "Tianyi TYFZA1 2.5G (RTL9617CVW)";
+	compatible = "tianyi,tyfza1-2p5g", "realtek,rtl9617c";
+};
+
+&eth {
+	p0-phy-config = <1 0>;
+	p1-phy-config = <2 0>;
+	p2-phy-config = <3 0>;
+	p4-phy-config = <7 1>;
+};
