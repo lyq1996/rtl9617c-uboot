@@ -167,6 +167,15 @@ config BCMGENET
 
 source "drivers/net/bnxt/Kconfig"
 
+config RTL9617C_NI
+	bool "Realtek RTL9617C NI Ethernet MAC"
+	depends on DM_ETH && SOC_RTL9617C
+	select PHYLIB
+	help
+	  Ethernet MAC found in the Realtek RTL9617C SoC.
+	  It drives the internal switch ports and the packet memory that the
+	  CPU shares with the MAC.
+
 config CORTINA_NI_ENET
 	bool "Cortina-Access Ethernet driver"
 	depends on CORTINA_PLATFORM

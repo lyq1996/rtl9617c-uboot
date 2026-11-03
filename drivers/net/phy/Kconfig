@@ -257,6 +257,12 @@ config PHY_NXP_TJA11XX
 	help
 	  Currently supports the NXP TJA1100 and TJA1101 PHY.
 
+config PHY_RTL8221B
+	bool "Realtek RTL8221B 2.5G Ethernet PHY"
+	help
+	  Driver for the Realtek RTL8221B 2.5G Ethernet PHY, including the
+	  revision 8 patch and analog register tables the part needs.
+
 config PHY_REALTEK
 	bool "Realtek Ethernet PHYs support"
 
