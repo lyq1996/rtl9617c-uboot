@@ -142,3 +142,9 @@ __pycache__
 
 # Clang's compilation database file
 /compile_commands.json
+
+# TF-A tools are built on demand, keep their output out of git
+tools/release/tf-a/tools/**/*.d
+tools/release/tf-a/tools/**/*.o
+tools/release/tf-a/tools/cert_create/cert_create
+tools/release/tf-a/tools/fiptool/fiptool
