@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0+
+if TARGET_PT1500_H10_2P5G
+config SYS_BOARD
+	default "pt1500"
+config SYS_VENDOR
+	default "realtek"
+config SYS_SOC
+	default "taurus"
+config SYS_CONFIG_NAME
+	default "pt1500"
+endif

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+# Recovery support shared by the Realtek Taurus boards
+
+config RTK_RECOVERY
+	bool
+	help
+	  Firmware format parsing, loader signature verification and the UBI
+	  install/restore engine used by the recovery environment. A board that
+	  enables this must also provide rtk_recovery_layout().
