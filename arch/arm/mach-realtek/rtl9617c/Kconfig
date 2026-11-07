@@ -17,5 +17,10 @@ config TARGET_YHUP_PT1500_H10_2P5G
 	bool "YHUP PT1500-H10 2.5G"
 	select SOC_RTL9617C
 
+config TARGET_YHUP_PT1570_H10
+	bool "YHUP PT1570-H10"
+	select SOC_RTL9617C
+
 source "board/tianyi/tyfza1/Kconfig"
 source "board/yhup/pt1500_h10/Kconfig"
+source "board/yhup/pt1570_h10/Kconfig"
