@@ -1,0 +1,84 @@
+.. SPDX-License-Identifier: GPL-2.0+
+
+PT1570-H10
+==========
+
+The PT1570-H10 is a Youhua XPON home gateway on the China Telecom firmware
+``PT1570R_V01`` (build ``YHUP_CT_RTK_PT1570``). U-Boot is the BL33 stage of
+the platform firmware and provides the boot path plus the browser based web
+failsafe.
+
+Hardware
+--------
+
+* Realtek RTL9617C, quad Cortex-A55, 64-bit ARM, 512 MiB DRAM
+* 256 MiB SPI NAND (page 2048, block 128 KiB), the platform partition table
+* Four GE ports, each on its own external RTL8211 PHY at MDIO address 1 to 4,
+  as on the PT1500
+* Cortina UART0, 115200 8n1, 125 MHz input clock
+* Reset key on bank 0 bit 8 (global GPIO 8), active low
+* Status lamps on bank 0: LED_EPHY0..3 on bits 4, 3, 1 and 0, active low,
+  LED_PWR_G on bit 11, active high, plus PON/LOS/PPP/FXS/USB/WPS lamps
+
+The GPIO map was read from the OEM kernel device tree this unit ships
+(``rtk_gpio_led`` and ``gpio-keys``); the lamp pins and the reset key match
+the PT1500.
+
+Building
+--------
+
+.. code-block:: bash
+
+   export CROSS_COMPILE=aarch64-linux-gnu-
+   make pt1570-h10_defconfig
+   make
+
+U-Boot is only the BL33 payload: the flashable image is produced by the
+platform tooling (``./build.sh pt1570-h10``), which keeps the stock BL2 and
+BL31 of this unit's backup and re-signs the chain with local keys. The
+``tools/release/boards/pt1570-h10.json`` record pins the stock digest
+(SHA256 ``8423ceff…05db0c1``) and the BL33 budget of this product
+(459,937 bytes, measured from its stock FIP).
+
+Storage layout
+--------------
+
+The physical partitioning is the platform one; see :doc:`../realtek/partitions`.
+The stock UBI carries the vendor's volume set (``ubi_Config``, the
+``ubi_DTB0``..``ubi_r1`` A/B slots, ``ubi_apps``, the ``ubi_framework`` pair);
+the failsafe service never removes volumes it does not rebuild, so a first
+flash of ``boot`` leaves the stock system intact. The rebuild table mirrors
+the other boards: an 8 MiB ``factory`` volume for the imported factory image,
+and ``fit`` covering the rest for the system image.
+
+Environment
+-----------
+
+``board/yhup/pt1570_h10/pt1570.env`` holds only what is specific to the
+hardware: the recovery network defaults and the load address. The boot
+policy - ``bootcmd``, the boot menu entries, the kernel command line - is
+set by code, identically on every board.
+
+The environment is stored redundantly, at 0x280000 and 0x2c0000.
+
+Boot flow
+---------
+
+``bootcmd`` is ``bootmenu``; the menu offers ``Start OpenWrt`` (``rtk_boot``)
+and ``Start Web Recovery`` (``rtk_recovery``). Holding the reset key at power
+on starts the web failsafe instead, and a key pressed after power-on is
+still caught by ``rtk_board_failsafe_spy()`` before ``bootcmd`` runs.
+
+Source layout
+-------------
+
+* ``arch/arm/dts/rtl9617c-pt1570-h10.dts`` - board nodes: reset key, flash
+  partitions, LAN PHY mapping
+* ``board/yhup/pt1570_h10/board.c`` - init; nothing else
+* ``board/yhup/pt1570_h10/desc.c`` - lamps and key
+* ``board/yhup/pt1570_h10/layout.c`` - volume table
+* ``board/yhup/pt1570_h10/pt1570.env`` - default environment
+* ``configs/pt1570-h10_defconfig``
+
+Everything else is shared: ``arch/arm/mach-realtek/rtl9617c/``, the drivers
+and ``board/realtek/{common,failsafe}/``.
