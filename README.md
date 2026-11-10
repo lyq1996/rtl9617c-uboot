@@ -5,6 +5,7 @@
 - Tianyi TYFZA1 2.5G
 - Tianyi TYFZA1 4GE
 - YHUP PT1500-H10 2.5G
+- YHUP PT1570-H10
 
 ## Build Dependencies
 
