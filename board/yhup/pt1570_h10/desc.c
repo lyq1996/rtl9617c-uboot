@@ -33,7 +33,7 @@ static const struct rtk_board_variant pt1570_variant = {
 
 static const struct rtk_board_desc pt1570_desc = {
 	.name = "PT1570",
-	.version = "2026.11",
+	.version = "2026.07",
 	.variant = &pt1570_variant,
 	.reset_pin = 8,
 	.reset_active_low = true,
