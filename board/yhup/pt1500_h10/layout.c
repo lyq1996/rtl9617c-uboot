@@ -26,7 +26,7 @@ const struct rtk_boot_layout *rtk_boot_layout(void)
 
 #ifdef CONFIG_RTK_WEB_FAILSAFE
 static const struct rtk_ubi_volume pt1500_volumes[] = {
-	{ "factory", RTK_VOL_DATA, RTK_FACTORY_IMAGE_SIZE, false },
+	{ "factory", RTK_VOL_DATA, CONFIG_RTK_FACTORY_SIZE, false },
 	{ "fit", RTK_VOL_FIRMWARE, 0, true },
 };
 

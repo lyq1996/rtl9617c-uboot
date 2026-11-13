@@ -5,3 +5,7 @@ config RTK_WEB_FAILSAFE
 	depends on NET_LWIP
 	select CMD_HTTPD
 	select CMD_UBI
+
+config RTK_FACTORY_SIZE
+	hex "Factory volume size in bytes"
+	default 0x800000

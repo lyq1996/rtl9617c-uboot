@@ -48,7 +48,7 @@ The stock UBI carries the vendor's volume set (``ubi_Config``, the
 ``ubi_DTB0``..``ubi_r1`` A/B slots, ``ubi_apps``, the ``ubi_framework`` pair);
 the failsafe service never removes volumes it does not rebuild, so a first
 flash of ``boot`` leaves the stock system intact. The rebuild table mirrors
-the other boards: an 8 MiB ``factory`` volume for the imported factory image,
+the other boards: an 64 KiB ``factory`` volume for the imported factory image,
 and ``fit`` covering the rest for the system image.
 
 Environment
