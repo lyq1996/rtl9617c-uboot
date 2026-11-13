@@ -8,4 +8,3 @@ config RTK_WEB_FAILSAFE
 
 config RTK_FACTORY_SIZE
 	hex "Factory volume size in bytes"
-	default 0x800000

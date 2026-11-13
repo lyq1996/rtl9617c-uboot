@@ -1,7 +1,7 @@
 {
-  "board": "tyfza1-4ge",
+  "board": "tianyi-tyfza1-4ge",
   "board_id": "TYFZA1-4GE",
-  "defconfig": "tyfza1-4ge_defconfig",
+  "defconfig": "tianyi-tyfza1-4ge_defconfig",
   "bl33_budget": 466854,
   "stock_sha256": "f68abf8a9bfcd89cf34409c27e932f8964e39217dadd394546286ce62b9dd689",
   "layout": {

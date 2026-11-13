@@ -153,4 +153,4 @@ tools/release/tf-a/tools/fiptool/fiptool
 board/realtek/failsafe/page.bin
 board/realtek/failsafe/page.c
 output/
-!stocks/*.bin
+!tools/release/stocks/*/stock-mtd0.bin

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Youhua PT1570-H10 (RTL9617C).
+ * Youhua PT1500-H10-CT (RTL9617C).
  *
- * A third product on the same SoC, and deliberately a small board file: the
+ * A second product on the same SoC, and deliberately a small board file: the
  * boot policy, the environment, the lamps and the key all come from
- * board/realtek, and the flash layout is in layout.c. Like the PT1500, its
- * four LAN ports are driven by external RTL8211 PHYs that sit at the same
- * MDIO addresses, so the internal GPHY wrappers are left alone.
+ * board/youhua/pt1500_h10/common, and the flash layout is in layout.c. The only thing
+ * this board does differently is leave the internal GPHY wrappers alone, because
+ * its four LAN ports are driven by external RTL8211 PHYs that sit at the same
+ * MDIO addresses.
  */
 #include <config.h>
 #include <init.h>

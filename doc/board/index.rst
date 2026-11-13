@@ -55,11 +55,12 @@ Board-specific doc
    realtek/index
    renesas/index
    rockchip/index
+   realtek/index
    samsung/index
    schneider/index
    sielaff/index
    tianyi/index
-   yhup/index
+   youhua/index
    siemens/index
    sifive/index
    sipeed/index
