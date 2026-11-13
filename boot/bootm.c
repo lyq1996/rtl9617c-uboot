@@ -41,7 +41,7 @@
 
 #define IH_INITRD_ARCH IH_ARCH_DEFAULT
 
-#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+#ifdef CONFIG_TARGET_YOUHUA_PT1500_H10_CT_2P5G
 #define PT1500_KERNEL_AREA	SZ_32M
 #endif
 
@@ -471,7 +471,7 @@ static int check_overlap(const char *name, ulong base, ulong end,
 	return 0;
 }
 
-#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+#ifdef CONFIG_TARGET_YOUHUA_PT1500_H10_CT_2P5G
 static void pt1500_move_fdt_off_kernel(ulong img_addr)
 {
 	ulong fdt = map_to_sysmem(images.ft_addr);
@@ -536,7 +536,7 @@ int bootm_find_images(ulong img_addr, const char *conf_ramdisk,
 			return 1;
 		}
 
-#ifdef CONFIG_TARGET_YHUP_PT1500_H10_2P5G
+#ifdef CONFIG_TARGET_YOUHUA_PT1500_H10_CT_2P5G
 		pt1500_move_fdt_off_kernel(img_addr);
 #endif
 

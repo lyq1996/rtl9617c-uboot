@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * PT1570 board description.
+ * Youhua PT1570-H10-CT 4GE board description.
  *
  * Read back from the OEM device tree this unit ships (rtk_gpio_led and
  * gpio-keys): all lamps sit on GPIO bank 0. Panel order follows the PT1500;
@@ -12,7 +12,7 @@
 #include <linux/kernel.h>
 #include <failsafe/desc.h>
 
-static const struct rtk_led pt1570_lamps[] = {
+static const struct rtk_led pt1570_h10_ct_4ge_lamps[] = {
 	{ .pin = 11 },				/* power, LED_PWR_G */
 	{ .pin = 9, .active_low = true },	/* pon, LED_PON */
 	{ .pin = 10, .active_low = true },	/* los, LED_LOS */
@@ -25,21 +25,21 @@ static const struct rtk_led pt1570_lamps[] = {
 	{ .pin = 4, .active_low = true },	/* lan1, LED_EPHY0 */
 };
 
-static const struct rtk_board_variant pt1570_variant = {
-	.lamp = pt1570_lamps,
-	.nr_lamps = ARRAY_SIZE(pt1570_lamps),
+static const struct rtk_board_variant pt1570_h10_ct_4ge_variant = {
+	.lamp = pt1570_h10_ct_4ge_lamps,
+	.nr_lamps = ARRAY_SIZE(pt1570_h10_ct_4ge_lamps),
 	.ports = "4×GE",
 };
 
-static const struct rtk_board_desc pt1570_desc = {
-	.name = "PT1570",
+static const struct rtk_board_desc pt1570_h10_ct_4ge_desc = {
+	.name = "Youhua PT1570-H10-CT",
 	.version = "2026.07",
-	.variant = &pt1570_variant,
+	.variant = &pt1570_h10_ct_4ge_variant,
 	.reset_pin = 8,
 	.reset_active_low = true,
 };
 
 const struct rtk_board_desc *rtk_board_desc(void)
 {
-	return &pt1570_desc;
+	return &pt1570_h10_ct_4ge_desc;
 }

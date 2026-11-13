@@ -1,0 +1,29 @@
+.. SPDX-License-Identifier: GPL-2.0+
+
+Youhua PT1570-H10-CT
+==========
+
+The Youhua PT1570-H10-CT board uses the Realtek RTL9617C SoC and provides a
+2.5-Gigabit or 4-Gigabit Ethernet port together with gigabit Ethernet ports.
+
+Build target
+------------
+
+.. code-block:: bash
+
+   make youhua-pt1570-h10-ct-4ge_defconfig
+
+The default device tree is:
+
+.. code-block:: none
+
+   rtl9617c-pt1570-h10-ct-4ge
+
+Board files
+-----------
+
+The board implementation is under ``board/youhua/pt1570_h10_ct/``. The board
+Kconfig sets the Youhuavendor, PT1570-H10-CT model and RTL9617C SoC metadata.
+
+The common SoC nodes are provided by ``arch/arm/dts/rtl9617c.dtsi``. The board
+DTS adds the PT1570-H10-CT nodes, flash partitions and board-specific aliases.

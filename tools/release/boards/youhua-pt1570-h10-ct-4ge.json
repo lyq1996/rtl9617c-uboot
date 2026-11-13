@@ -1,7 +1,7 @@
 {
-  "board": "pt1570-h10",
-  "board_id": "PT1570-H10",
-  "defconfig": "pt1570-h10_defconfig",
+  "board": "youhua-pt1570-h10-ct-4ge",
+  "board_id": "PT1570-H10-CT-4GE",
+  "defconfig": "youhua-pt1570-h10-ct-4ge_defconfig",
   "bl33_budget": 459937,
   "stock_sha256": "8423ceffb250cc548c4bb132fd68c7456aab51e434afd2d42f3feada605db0c1",
   "layout": {

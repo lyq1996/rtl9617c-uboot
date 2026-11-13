@@ -6,8 +6,8 @@
 #include "rtl9617c.dtsi"
 
 / {
-	model = "Youhua PT1500-H10 2.5G";
-	compatible = "youhua,pt1500-h10-2p5g", "realtek,rtl9617c";
+	model = "Youhua PT1500-H10-CT";
+	compatible = "youhua,pt1500-h10-ct-2p5g", "realtek,rtl9617c";
 
 	aliases {
 		serial0 = &uart0;

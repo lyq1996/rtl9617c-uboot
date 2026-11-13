@@ -1,9 +1,9 @@
 {
-  "board": "pt1500-h10-2p5g",
-  "board_id": "PT1500-H10-2P5G",
-  "defconfig": "pt1500-h10-2p5g_defconfig",
-  "bl33_budget": 459961,
-  "stock_sha256": "fe56d8072895becc5111e98560c74e66e8f1b359980282bc2ab4f9aeb37fbd3d",
+  "board": "tianyi-tyfza1-2p5g",
+  "board_id": "TYFZA1-2P5G",
+  "defconfig": "tianyi-tyfza1-2p5g_defconfig",
+  "bl33_budget": 466854,
+  "stock_sha256": "f68abf8a9bfcd89cf34409c27e932f8964e39217dadd394546286ce62b9dd689",
   "layout": {
     "boot_size": 2097152,
     "fip_slot_offsets": [

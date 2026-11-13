@@ -13,14 +13,14 @@ config TARGET_TIANYI_TYFZA1_4GE
 	bool "Tianyi TYFZA1 4GE"
 	select SOC_RTL9617C
 
-config TARGET_YHUP_PT1500_H10_2P5G
-	bool "YHUP PT1500-H10 2.5G"
+config TARGET_YOUHUA_PT1500_H10_CT_2P5G
+	bool "Youhua PT1500-H10-CT 2.5G"
 	select SOC_RTL9617C
 
-config TARGET_YHUP_PT1570_H10
-	bool "YHUP PT1570-H10"
+config TARGET_YOUHUA_PT1570_H10_CT_4GE
+	bool "Youhua PT1570-H10-CT 4GE"
 	select SOC_RTL9617C
 
 source "board/tianyi/tyfza1/Kconfig"
-source "board/yhup/pt1500_h10/Kconfig"
-source "board/yhup/pt1570_h10/Kconfig"
+source "board/youhua/pt1500-h10-ct/Kconfig"
+source "board/youhua/pt1570-h10-ct/Kconfig"

@@ -4,8 +4,8 @@
 
 - Tianyi TYFZA1 2.5G
 - Tianyi TYFZA1 4GE
-- YHUP PT1500-H10 2.5G
-- YHUP PT1570-H10
+- Youhua PT1500-H10-CT 2.5G
+- Youhua PT1570-H10-CT 4GE
 
 ## Build Dependencies
 
@@ -35,17 +35,18 @@ Set the cross compiler and build one board:
 
 ```sh
 export CROSS_COMPILE=aarch64-linux-gnu-
-make O=output/tyfza1-2p5g tyfza1-2p5g_defconfig
-make O=output/tyfza1-2p5g -j"$(nproc)"
+make O=output/tianyi-tyfza1-2p5g tianyi-tyfza1-2p5g_defconfig
+make O=output/tianyi-tyfza1-2p5g -j"$(nproc)"
 ```
 
 Use these defconfig and device-tree combinations:
 
 | Board | Defconfig | Device tree |
 | --- | --- | --- |
-| TYFZA1 2.5G | `tyfza1-2p5g_defconfig` | `rtl9617c-tyfza1-2p5g` |
-| TYFZA1 4GE | `tyfza1-4ge_defconfig` | `rtl9617c-tyfza1-4ge` |
-| PT1500-H10 2.5G | `pt1500-h10-2p5g_defconfig` | `rtl9617c-pt1500-h10-2p5g` |
+| Tianyi TYFZA1 2.5G | `tianyi-tyfza1-2p5g_defconfig` | `rtl9617c-tianyi-tyfza1-2p5g` |
+| Tianyi TYFZA1 4GE | `tianyi-tyfza1-4ge_defconfig` | `rtl9617c-tianyi-tyfza1-4ge` |
+| Youhua PT1500-H10-CT 2.5G | `youhua-pt1500-h10-ct-2p5g_defconfig` | `rtl9617c-youhua-pt1500-h10-ct-2p5g` |
+| Youhua PT1570-H10-CT 4GE | `youhua-pt1570-h10-ct-4ge_defconfig` | `rtl9617c-youhua-pt1570-h10-ct-4ge` |
 
 ## Build Release Images
 
@@ -58,15 +59,15 @@ Build and verify all supported boards:
 Build one board through the complete release flow:
 
 ```sh
-./build.sh tyfza1-2p5g
+./build.sh tianyi-tyfza1-2p5g
 ```
 
 Run individual stages when the earlier output already exists:
 
 ```sh
-./build.sh tyfza1-2p5g bl33
-./build.sh tyfza1-2p5g pack
-./build.sh tyfza1-2p5g verify
+./build.sh tianyi-tyfza1-2p5g bl33
+./build.sh tianyi-tyfza1-2p5g pack
+./build.sh tianyi-tyfza1-2p5g verify
 ```
 
 The generated files are placed under `output/<board>/`:
