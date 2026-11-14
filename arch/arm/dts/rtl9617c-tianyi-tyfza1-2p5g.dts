@@ -12,5 +12,4 @@
 	p0-phy-config = <1 0>;
 	p1-phy-config = <2 0>;
 	p2-phy-config = <3 0>;
-	p4-phy-config = <7 1>;
 };

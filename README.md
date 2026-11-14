@@ -7,6 +7,14 @@
 - Youhua PT1500-H10-CT 2.5G
 - Youhua PT1570-H10-CT 4GE
 
+Note: 
+
+The 2.5G external PHY is currently unsupported due to the following reasons:
+1. Upstream U-Boot does not provide an RTL8221B driver.
+2. The ported driver is currently unstable.
+
+Please use a 1GE port instead.
+
 ## Build Dependencies
 
 On Ubuntu, install the cross compiler and release-tool dependencies:
