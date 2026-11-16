@@ -20,8 +20,6 @@
 #define RTK_FIP0_OFFSET		0x40000U
 #define RTK_FIP1_OFFSET		0x100000U
 
-#define RTK_FACTORY_IMAGE_SIZE	0x800000U
-
 struct rtk_payload {
 	const unsigned char *data;
 	size_t size;

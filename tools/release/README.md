@@ -16,9 +16,10 @@ Run the commands from the repository root:
 
 The supported board names are:
 
-    pt1500-h10-2p5g
-    tyfza1-2p5g
-    tyfza1-4ge
+    youhua-pt1500-h10-ct-2p5g
+    youhua-pt1570-h10-ct-2p5g
+    tianyi-tyfza1-2p5g
+    tianyi-tyfza1-4ge
 
 Each board uses its ordinary U-Boot defconfig. There is no separate Web or
 plain defconfig. `build_bl33.sh` builds `output/<board>/bl33.bin` from the

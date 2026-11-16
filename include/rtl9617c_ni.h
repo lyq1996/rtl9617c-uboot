@@ -43,8 +43,6 @@ struct rtl9617c_ni_ops {
 /* Implemented by the board; NULL when the board needs no special handling. */
 const struct rtl9617c_ni_ops *rtl9617c_ni_board_ops(void);
 
-int rtl9617c_ni_sgmii_speed(int speed);
-
 void rtl9617c_ni_gphy_setup(void);
 
 #endif /* __RTL9617C_NI_H */

@@ -15,8 +15,8 @@ Build targets
 
 .. code-block:: bash
 
-   make tyfza1-2p5g_defconfig
-   make tyfza1-4ge_defconfig
+   make tianyi-tyfza1-2p5g_defconfig
+   make tianyi-tyfza1-4ge_defconfig
 
 The default device trees are:
 

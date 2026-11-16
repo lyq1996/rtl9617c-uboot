@@ -46,10 +46,7 @@
 
 #include <rtl9617c_ni.h>
 #include "rtl9617c_ni_priv.h"
-
 #include "rtl9617c_ni_regs.h"
-
-#include "rtl9617c_sgmii.h"
 
 #define MODULE_NAME "NI"
 
@@ -418,20 +415,6 @@ static int rtl9617c_ni_phy_status(struct phy_device *phy)
 __weak const struct rtl9617c_ni_ops *rtl9617c_ni_board_ops(void)
 {
 	return NULL;
-}
-
-/*
- * Program the serdes feeding the port that carries the external 2.5G PHY.
- * Only SoC registers are involved, so the board just decides when to call it.
- */
-int rtl9617c_ni_sgmii_speed(int speed)
-{
-	if (speed != 10 && speed != 100 && speed != 1000 && speed != 2500)
-		return -EINVAL;
-	rtl_sgmii_link((void *)0xf43200c4, (void *)0xf43200a0,
-		       (void *)0xf43200d4, (void *)0xf433b000, speed);
-
-	return 0;
 }
 
 /* Re-read the active link every 250 ms and re-sync the switch port with it. */

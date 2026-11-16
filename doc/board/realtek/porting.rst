@@ -59,7 +59,8 @@ product of the SoC shares sits directly below ``board/realtek``:
    board/realtek/failsafe/    browser based recovery: service, engine,
                               storage, board description, status lamps
    board/tianyi/tyfza1/
-   board/yhup/pt1500_h10/
+   board/youhua/pt1500-h10-ct/
+   board/youhua/pt1570-h10-ct/
 
 A board directory contains its Kconfig, Makefile, board initialization,
 board-specific device data and environment file, and pulls in the shared

@@ -1,15 +1,12 @@
 {
-  "board": "tyfza1-2p5g",
-  "board_id": "TYFZA1-2P5G",
-  "defconfig": "tyfza1-2p5g_defconfig",
-  "bl33_budget": 466854,
-  "stock_sha256": "f68abf8a9bfcd89cf34409c27e932f8964e39217dadd394546286ce62b9dd689",
+  "board": "youhua-pt1570-h10-ct-2p5g",
+  "board_id": "PT1570-H10-CT-2P5G",
+  "defconfig": "youhua-pt1570-h10-ct-2p5g_defconfig",
+  "bl33_budget": 459937,
+  "stock_sha256": "8423ceffb250cc548c4bb132fd68c7456aab51e434afd2d42f3feada605db0c1",
   "layout": {
     "boot_size": 2097152,
-    "fip_slot_offsets": [
-      262144,
-      1048576
-    ],
+    "fip_slot_offsets": [262144, 1048576],
     "fip_slot_capacity": 786432,
     "toc_magic_hex": "010064aa78563412",
     "toc_header_size": 16,
