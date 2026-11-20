@@ -315,7 +315,7 @@ button.mini{border:1px solid var(--border-strong);border-radius:8px;background:v
 </div>
 <div class="settings-section">
 <h3 class="settings-heading">整片恢复</h3>
-<p class="settings-help">从偏移 0 恢复完整nand数据，引导区最后写入。文件大小必须与 Flash 容量一致。</p>
+<p class="settings-help">从偏移 0 恢复完整nand数据，文件大小必须与 Flash 容量一致。</p>
 <label class="file"><input id="allFlashFile" type="file"><b>选择文件</b><span>未选择文件</span></label>
 </div>
 <div class="settings-section">
@@ -638,7 +638,7 @@ function renderTargets(){
  for(const id of ['backupTarget','writeTarget']){
   const prev=el(id).value;el(id).replaceChildren();
   list.forEach(v=>{
-   if(id==='writeTarget'&&(v.whole||(v.kind==='mtd'&&v.name===name('boot','boot'))))return;
+   if(id==='writeTarget'&&(v.whole))return;
    const o=document.createElement('option');o.value=key(v);
    o.textContent=(v.whole?'整片 Flash':v.name)+' · '+(v.kind==='ubi'?'UBI':'MTD')+' · '+bytes(v.kind==='ubi'&&id==='writeTarget'?v.reserved:v.size);
    el(id).appendChild(o);

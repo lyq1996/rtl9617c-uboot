@@ -80,7 +80,6 @@ static struct {
 	size_t pending;
 	bool updating;
 	struct mtd_info *mtd;
-	u8 *boot;
 	u32 crc;
 	ulong touched;
 	char error[192];
@@ -114,8 +113,6 @@ static void write_release(void)
 {
 	fs_mem_free(w.buf);
 	w.buf = NULL;
-	free(w.boot);
-	w.boot = NULL;
 	if (w.mtd)
 		put_mtd_device(w.mtd);
 	w.mtd = NULL;
@@ -204,9 +201,6 @@ static int open_mtd(void)
 	if (w.op == W_MTD && !mtd_is_partition(mtd))
 		return fail(-EINVAL, "%s is the whole device; use the full NAND restore",
 			    mtd->name);
-	if (w.op == W_MTD && !strcmp(mtd->name, l->boot_mtd))
-		return fail(-EPERM, "%s is written by the U-Boot update or a full NAND restore",
-			    mtd->name);
 	if (w.op == W_NAND && mtd_is_partition(mtd))
 		return fail(-EINVAL, "%s is not a whole device", mtd->name);
 	if (w.size != mtd->size)
@@ -216,11 +210,6 @@ static int open_mtd(void)
 	    w.size % mtd->erasesize)
 		return fail(-EINVAL, "%s cannot be written in %zu byte chunks",
 			    mtd->name, w.chunk);
-	if (w.op == W_NAND) {
-		w.boot = malloc_cache_aligned(RTK_BOOT_SIZE);
-		if (!w.boot)
-			return fail(-ENOMEM, "no memory for the boot area");
-	}
 	if ((w.op == W_NAND || !strcmp(mtd->name, l->boot->ubi_part)) &&
 	    rtk_ubi_attached()) {
 		puts("Detaching UBI before the raw write.\n");
@@ -427,24 +416,11 @@ static int firmware_begin(const u8 *data, size_t len)
 static int nand_chunk(const u8 *data, size_t at, size_t len,
 		      const struct storage_job *ctx)
 {
-	size_t skip = 0;
 	int ret;
 
-	if (at < RTK_BOOT_SIZE) {
-		if (at || len < RTK_BOOT_SIZE)
-			return fail(-EINVAL, "the first chunk must hold the whole boot area");
-		memcpy(w.boot, data, RTK_BOOT_SIZE);
-		if (rtk_validate_loader(w.boot, RTK_BOOT_SIZE))
-			return fail(-EINVAL, "the boot area of this image does not belong to this device");
-		skip = RTK_BOOT_SIZE;
-	}
-	if (len == skip)
-		return 0;
-	ret = rtk_mtd_write(w.mtd, at + skip, data + skip, len - skip, ctx,
-			    at + skip, w.size, true);
+	ret = rtk_mtd_write(w.mtd, at, data, len, ctx, at, w.size, true);
 	if (ret)
-		return fail(ret, "writing %s at 0x%zx failed (%d)", w.target,
-			    at + skip, ret);
+		return fail(ret, "writing %s at 0x%zx failed (%d)", w.target, at, ret);
 
 	return 0;
 }
@@ -606,10 +582,7 @@ static int write_commit(void)
 		       w.size);
 		break;
 	case W_NAND:
-		ctx.progress = NULL;
-		ret = rtk_install_boot(w.boot, RTK_BOOT_SIZE, &ctx);
-		if (!ret)
-			puts("Full NAND restore complete; the boot area was written last.\n");
+		puts("Full NAND restore complete.\n");
 		break;
 	case W_UBOOT:
 		ret = rtk_install_boot(w.buf, w.size, &ctx);
