@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include "rtl9617c.dtsi"
+
+/ {
+	model = "Youhua PT1570-H10-CU";
+	compatible = "youhua,pt1570-h10-cu-2p5g", "realtek,rtl9617c";
+
+	aliases {
+		serial0 = &uart0;
+		ethernet0 = &eth;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+
+		reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			/* OEM DTB: bank 0 bit 8, active low */
+			gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
+
+/*
+ * Flash layout: the platform firmware, one environment block, and a single
+ * UBI device for everything else. The controller base is fixed in the
+ * driver, so the node carries no reg. The offsets are the vendor's own
+ * (stock mtdparts: 2048K(boot),256K@0x280000(env),256K@0x2C0000(env2),
+ * 256K@0x300000(static_conf),251648K@0x340000(ubi_device)).
+ */
+&spi_nand {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot@0 {
+			label = "boot";
+			reg = <0x0 0x200000>;
+		};
+
+		/* 0x200000-0x280000: unowned, as the vendor left it. */
+		env@280000 {
+			label = "env";
+			reg = <0x280000 0x40000>;
+		};
+
+		env2@2c0000 {
+			label = "env2";
+			reg = <0x2c0000 0x40000>;
+		};
+
+		static_conf@300000 {
+			label = "static_conf";
+			reg = <0x300000 0x40000>;
+		};
+
+		ubi_device@340000 {
+			label = "ubi_device";
+			reg = <0x340000 0xf5c0000>;
+		};
+	};
+};
+
+/*
+ * U-Boot-side PHY wiring for the Unicom CU variant. The Linux firmware DTS
+ * (rtl9617c-pt1570-h10-cu.dts) uses a different topology: four GE phys on
+ * MDIO 0-3 plus an RTL8221B 2.5G PHY at MDIO 6 (realtek,p6-phy). U-Boot only
+ * needs Ethernet for the web-recovery payload, and the CT wiring below has
+ * been verified on the CU unit (U-Boot release 8). Keep it identical.
+ */
+&eth {
+	p0-phy-config = <1 0>;
+	p1-phy-config = <2 0>;
+	p2-phy-config = <3 0>;
+	p3-phy-config = <4 0>;
+};

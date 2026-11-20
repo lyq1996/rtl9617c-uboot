@@ -1,0 +1,46 @@
+.. SPDX-License-Identifier: GPL-2.0+
+
+Youhua PT1570-H10-CU
+====================
+
+The Youhua PT1570-H10-CU is the China Unicom variant of the PT1570-H10.
+It uses the Realtek RTL9617C SoC with one 2.5-Gigabit port, three gigabit
+ports and two PCIe WiFi 6 cards.
+
+It is a separate target from ``pt1570-h10-ct`` on purpose.  Although the
+FIP geometry and UUIDs are shared, the two products ship different stock
+boot records (per-unit GPT GUID, BL2 and BL31), a different front-panel
+lamp map, and slightly different firmware DTS PHY wiring.  Flashing a
+CT-built boot image onto a CU unit overwrites those vendor regions and
+the unit will not boot.
+
+Build target
+------------
+
+.. code-block:: bash
+
+   make youhua-pt1570-h10-cu-2p5g_defconfig
+
+The default device tree is:
+
+.. code-block:: none
+
+   rtl9617c-youhua-pt1570-h10-cu-2p5g
+
+Board files
+-----------
+
+The board implementation is under ``board/youhua/pt1570-h10-cu/``.
+``desc-2p5g.c`` lists the eleven U-Boot-drivable status lamps in physical
+front-panel order; the 5G / 2.4G WiFi lamps are driven by the PCIe cards and
+the 2.5G jack lamp by the external PHY, so those positions are skipped.
+
+Release image
+-------------
+
+``tools/release/boards/youhua-pt1570-h10-cu-2p5g.json`` records the geometry,
+FIP UUIDs and the digest of the CU stock boot record.  The stock binary
+itself is **not** included in this tree: it is device-specific and must be
+backed up from the target unit (``mtd0``, 2 MiB) and supplied to
+``tools/release/pack_boot.py`` with ``--stock`` at build time.  ``pack_boot.py``
+keeps GPT / BL2 / BL31 byte-identical to that stock and replaces only BL33.

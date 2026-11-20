@@ -8,3 +8,4 @@ Youhua
 
    pt1500_h10_ct
    pt1570_h10_ct
+   pt1570_h10_cu
