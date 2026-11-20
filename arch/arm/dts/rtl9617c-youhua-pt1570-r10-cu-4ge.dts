@@ -6,8 +6,8 @@
 #include "rtl9617c.dtsi"
 
 / {
-	model = "Youhua PT1570-R10";
-	compatible = "youhua,pt1570-r10", "realtek,rtl9617c";
+	model = "Youhua PT1570-R10-CU";
+	compatible = "youhua,pt1570-r10-cu-4ge", "realtek,rtl9617c";
 
 	aliases {
 		serial0 = &uart0;
@@ -72,7 +72,7 @@
 };
 
 /*
- * PT1570-R10 drives all four GE LAN ports from the SoC internal GPHY wrapper
+ * PT1570-R10-CU drives all four GE LAN ports from the SoC internal GPHY wrapper
  * (OEM DTB: phy@f43200c4, "realtek,taurus-phy", children phy@0..7). The NI
  * driver's is_internal_phy() treats MDIO addresses 1..4 as internal and
  * reaches them through the GPHY wrapper MMIO instead of the MDIO bus, so the

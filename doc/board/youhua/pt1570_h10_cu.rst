@@ -3,7 +3,7 @@
 Youhua PT1570-H10-CU
 ====================
 
-The Youhua PT1570-H10-CU is the China Unicom variant of the PT1570-H10.
+The Youhua PT1570-H10-CU is the CU variant of the PT1570-H10.
 It uses the Realtek RTL9617C SoC with one 2.5-Gigabit port, three gigabit
 ports and two PCIe WiFi 6 cards.
 

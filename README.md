@@ -6,6 +6,8 @@
 - Tianyi TYFZA1 4GE
 - Youhua PT1500-H10-CT 2.5G
 - Youhua PT1570-H10-CT 2.5G
+- Youhua PT1570-H10-CU 2.5G
+- Youhua PT1570-R10-CU 4GE
 
 Note: 
 
@@ -55,6 +57,8 @@ Use these defconfig and device-tree combinations:
 | Tianyi TYFZA1 4GE | `tianyi-tyfza1-4ge_defconfig` | `rtl9617c-tianyi-tyfza1-4ge` |
 | Youhua PT1500-H10-CT 2.5G | `youhua-pt1500-h10-ct-2p5g_defconfig` | `rtl9617c-youhua-pt1500-h10-ct-2p5g` |
 | Youhua PT1570-H10-CT 2.5G | `youhua-pt1570-h10-ct-2p5g_defconfig` | `rtl9617c-youhua-pt1570-h10-ct-2p5g` |
+| Youhua PT1570-H10-CU 2.5G | `youhua-pt1570-h10-cu-2p5g_defconfig` | `rtl9617c-youhua-pt1570-h10-cu-2p5g` |
+| Youhua PT1570-R10-CU 4GE | `youhua-pt1570-r10-cu-4ge_defconfig` | `rtl9617c-youhua-pt1570-r10-cu-4ge` |
 
 ## Build Release Images
 

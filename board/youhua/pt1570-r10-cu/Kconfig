@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0+
-if TARGET_YOUHUA_PT1570_R10
+if TARGET_YOUHUA_PT1570_R10_CU_4GE
 config SYS_BOARD
-	default "pt1570-r10"
+	default "pt1570-r10-cu"
 config SYS_VENDOR
 	default "youhua"
 endif

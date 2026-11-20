@@ -1,9 +1,9 @@
 .. SPDX-License-Identifier: GPL-2.0+
 
-Youhua PT1570-R10
+Youhua PT1570-R10-CU
 =================
 
-The Youhua PT1570-R10 uses the Realtek RTL9617C SoC with four gigabit
+The Youhua PT1570-R10-CU uses the Realtek RTL9617C SoC with four gigabit
 Ethernet ports driven by the SoC internal GPHY wrapper (no external
 RTL8211 PHYs, unlike the H10 boards), a 10G EPON uplink and two PCIe
 WiFi 6 cards.
@@ -13,18 +13,18 @@ Build target
 
 .. code-block:: bash
 
-   make youhua-pt1570-r10_defconfig
+   make youhua-pt1570-r10-cu-4ge_defconfig
 
 The default device tree is:
 
 .. code-block:: none
 
-   rtl9617c-youhua-pt1570-r10
+   rtl9617c-youhua-pt1570-r10-cu-4ge
 
 Board files
 -----------
 
-The board implementation is under ``board/youhua/pt1570-r10/``.
+The board implementation is under ``board/youhua/pt1570-r10-cu/``.
 ``desc.c`` lists the eleven U-Boot-drivable status lamps in physical
 front-panel order: ``11,9,10,0,1,3,4,12,2,5,7``.  Note the GE segment
 runs ``0,1,3,4`` because the EPHY numbering is opposite to the panel
@@ -36,7 +36,7 @@ The 5G / 2.4G lamps belong to the PCIe cards and stay dark in U-Boot.
 Release image
 -------------
 
-``tools/release/boards/youhua-pt1570-r10.json`` carries the geometry,
+``tools/release/boards/youhua-pt1570-r10-cu-4ge.json`` carries the geometry,
 FIP UUIDs and the digest of the R10 stock boot record.  The 2 MiB stock
 binary is device-specific and is not shipped here; back it up from the
 target unit and pass it to ``pack_boot.py`` with ``--stock``.

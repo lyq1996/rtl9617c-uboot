@@ -6,7 +6,10 @@
   "stock_sha256": "8423ceffb250cc548c4bb132fd68c7456aab51e434afd2d42f3feada605db0c1",
   "layout": {
     "boot_size": 2097152,
-    "fip_slot_offsets": [262144, 1048576],
+    "fip_slot_offsets": [
+      262144,
+      1048576
+    ],
     "fip_slot_capacity": 786432,
     "toc_magic_hex": "010064aa78563412",
     "toc_header_size": 16,

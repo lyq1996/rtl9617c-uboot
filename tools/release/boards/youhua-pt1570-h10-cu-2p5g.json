@@ -25,6 +25,5 @@
     "tb_fw_cert": "ea69e2d6-635d-11e4-8d8c-9fbabe9956a5",
     "soc_fw_cert": "200cb2e2-635e-11e4-9ce8-abccf92bb666",
     "nt_fw_cert": "f3c1c48e-635d-11e4-a7a9-87ee40b23fa7"
-  },
-  "_comment": "联通版 PT1570-H10-CU 独立板级：1x2.5GE + 3xGE + WiFi6。FIP 几何/UUID 与 CT-2P5G 一致；stock sha256 为特定联通机的 mtd0 备份摘要，stock 二进制不随源码发布，编译时需用 --stock 传入本机备份；GPT/BL2/BL31 原样保留，只替换 BL33。"
+  }
 }

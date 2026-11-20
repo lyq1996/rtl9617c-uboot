@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Youhua PT1570-H10-CU (RTL9617C, China Unicom variant).
+ * Youhua PT1570-H10-CU (RTL9617C).
  *
  * A sibling of PT1570-H10-CT on the same SoC. The CU variant carries its
  * own stock (per-unit GPT GUID / BL2 / BL31) and its own panel lamp map,

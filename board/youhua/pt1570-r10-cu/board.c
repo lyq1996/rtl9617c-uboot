@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Youhua PT1570-R10 (RTL9617C, 10G EPON).
+ * Youhua PT1570-R10-CU (RTL9617C).
  *
  * Board policy, environment, lamps and the reset key come from
  * board/realtek; the flash volume layout is in layout.c. Unlike the H10,

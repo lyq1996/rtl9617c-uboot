@@ -27,7 +27,7 @@
  *     so they are physically impossible to drive at this stage. They are
  *     skipped (no dark frames).
  *   - #12 WPS is a REAL SoC GPIO LED: DTS defines gpio0 pin5 active-high
- *     LED_WPS_G, and the same RTL9617C platform (PT1570-R10) proved by real
+ *     LED_WPS_G, and the same RTL9617C platform (PT1570-R10-CU) proved by real
  *     hardware on 2026-11-19 that buttons are pin8/pin99/pin103 while pin5 is
  *     the WPS lamp. Claiming pin5 does NOT steal a button. It is therefore
  *     added back at its physical panel index (between 宽带 and USB) so the

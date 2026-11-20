@@ -4,5 +4,5 @@ obj-y += ../../realtek/failsafe/
 obj-y += board.o
 obj-y += layout.o
 ifdef CONFIG_RTK_WEB_FAILSAFE
-obj-$(CONFIG_TARGET_YOUHUA_PT1570_R10) += desc.o
+obj-$(CONFIG_TARGET_YOUHUA_PT1570_R10_CU_4GE) += desc-4ge.o
 endif

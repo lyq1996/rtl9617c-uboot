@@ -1,7 +1,7 @@
 {
-  "board": "youhua-pt1570-r10",
-  "board_id": "PT1570-R10",
-  "defconfig": "youhua-pt1570-r10_defconfig",
+  "board": "youhua-pt1570-r10-cu-4ge",
+  "board_id": "PT1570-R10-CU-4GE",
+  "defconfig": "youhua-pt1570-r10-cu-4ge_defconfig",
   "bl33_budget": 477351,
   "stock_sha256": "5ee1e8f8853bd4ba8b06ac6410e421cf3bcaa0b68e994f3de853b7f86d4c01b1",
   "layout": {
@@ -25,6 +25,5 @@
     "tb_fw_cert": "ea69e2d6-635d-11e4-8d8c-9fbabe9956a5",
     "soc_fw_cert": "200cb2e2-635e-11e4-9ce8-abccf92bb666",
     "nt_fw_cert": "f3c1c48e-635d-11e4-a7a9-87ee40b23fa7"
-  },
-  "_comment": "联通 Youhua PT1570-R10（10G EPON，4xGE 内部 GPHY）：stock 为本机 mtd0 备份摘要，二进制不随源码发布，编译时用 pack_boot.py --stock 传入；GPT/BL2/BL31 原样保留，只替换 BL33。"
+  }
 }

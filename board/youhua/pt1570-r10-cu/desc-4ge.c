@@ -69,7 +69,7 @@
 #include <linux/kernel.h>
 #include <failsafe/desc.h>
 
-static const struct rtk_led pt1570_r10_lamps[] = {
+static const struct rtk_led pt1570_r10_CU_4GE_lamps[] = {
 	{ .pin = 11 },				/*  1 电源    LED_PWR_G  (high) */
 	{ .pin = 9,  .active_low = true },	/*  2 注册    LED_PON    (low)  */
 	{ .pin = 10, .active_low = true },	/*  3 光信号  LED_LOS    (low)  */
@@ -84,21 +84,21 @@ static const struct rtk_led pt1570_r10_lamps[] = {
 	{ .pin = 7 },				/* 13 USB     LED_USB0   (high) */
 };
 
-static const struct rtk_board_variant pt1570_r10_variant = {
-	.lamp = pt1570_r10_lamps,
-	.nr_lamps = ARRAY_SIZE(pt1570_r10_lamps),
+static const struct rtk_board_variant pt1570_r10_cu_4ge_variant = {
+	.lamp = pt1570_r10_CU_4GE_lamps,
+	.nr_lamps = ARRAY_SIZE(pt1570_r10_CU_4GE_lamps),
 	.ports = "4xGE (internal GPHY)",
 };
 
-static const struct rtk_board_desc pt1570_r10_desc = {
-	.name = "PT1570-R10",
-	.version = "2026.11",
-	.variant = &pt1570_r10_variant,
+static const struct rtk_board_desc pt1570_r10_cu_4ge_desc = {
+	.name = "Youhua PT1570-R10-CU",
+	.version = "2026.07",
+	.variant = &pt1570_r10_cu_4ge_variant,
 	.reset_pin = 8,
 	.reset_active_low = true,
 };
 
 const struct rtk_board_desc *rtk_board_desc(void)
 {
-	return &pt1570_r10_desc;
+	return &pt1570_r10_cu_4ge_desc;
 }
