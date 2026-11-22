@@ -34,7 +34,7 @@
  * => 11 lamps = the real SoC GPIO status lamps, in exact panel order.
  *
  * Why the order matters (failsafe/led.c, do NOT "simplify" this):
- *   rtk_board_boot_leds() sweeps lamp[0..n] once at power-on;
+ *   the boot beat (RTK_LEDS_BOOT) pulses the power lamp once a second;
  *   RTK_LEDS_IDLE runs lamp_runner() along the array (one lamp + its trailing
  *   neighbour, 150 ms/step); RTK_LEDS_BUSY fills lamp_bar() from index 0;
  *   DONE holds all on for 2 s; FAILED alternates odd/even indices.
@@ -87,6 +87,7 @@ static const struct rtk_led pt1570_r10_CU_4GE_lamps[] = {
 static const struct rtk_board_variant pt1570_r10_cu_4ge_variant = {
 	.lamp = pt1570_r10_CU_4GE_lamps,
 	.nr_lamps = ARRAY_SIZE(pt1570_r10_CU_4GE_lamps),
+	.pwr = { .pin = 11 },
 	.ports = "4xGE (internal GPHY)",
 };
 

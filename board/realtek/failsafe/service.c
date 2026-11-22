@@ -331,7 +331,7 @@ static void job_run(void)
 	job.state = JOB_DONE;
 
 	fs_write_status(&st);
-	if (ret && job.writes)
+	if (ret)
 		rtk_board_leds(RTK_LEDS_FAILED);
 	else if (fs_write_active())
 		rtk_board_leds_busy(st.next, st.size);
@@ -916,11 +916,47 @@ static void fs_started(void)
 	rtk_board_leds(RTK_LEDS_IDLE);
 }
 
+/*
+ * A RAM boot staged by a write session. bootm never returns on success, so
+ * the commit job has to reach the client first; the boot waits in the tick
+ * for a few of its status polls, then leaves the service behind.
+ */
+#define RAM_BOOT_DELAY_MS	2000
+
+static struct {
+	bool pending;
+	ulong addr, since;
+} ram_boot;
+
+void fs_boot_schedule(ulong addr)
+{
+	ram_boot.pending = true;
+	ram_boot.addr = addr;
+	ram_boot.since = get_timer(0);
+}
+
+static void ram_boot_poll(void)
+{
+	bool captured;
+
+	if (!ram_boot.pending || get_timer(ram_boot.since) < RAM_BOOT_DELAY_MS)
+		return;
+	ram_boot.pending = false;
+	/* bootm clears the lamps via board_preboot_os on its way to the OS. */
+	captured = capture_begin();
+	run_commandf("bootm 0x%lx", ram_boot.addr);
+	if (captured)
+		capture_end();
+	rtk_board_leds(RTK_LEDS_FAILED);
+	fs_fail(-EIO, "booting the image from RAM failed");
+}
+
 static void fs_poll(void)
 {
 	job_run();
 	fs_write_poll();
 	fs_backup_poll();
+	ram_boot_poll();
 	rtk_board_leds_poll();
 }
 

@@ -6,8 +6,13 @@
  * they show is the same everywhere and runs along that order: a runner while
  * the recovery page waits, a progress bar while Flash is written, and a result
  * that stays until the next operation. Only the number of lamps differs.
+ *
+ * The power lamp sits outside that array: while u-boot runs it beats once a
+ * second from the cyclic tick, and the preboot hook hands it back before the
+ * OS runs. Everywhere else it stays with its previous owner.
  */
 #include <config.h>
+#include <cyclic.h>
 #include <time.h>
 #include <string.h>
 #include <cortina_nand.h>
@@ -28,6 +33,13 @@ static enum rtk_led_state lamp_state;
 static ulong lamp_since;
 static size_t lamp_done, lamp_total;
 static u32 lamp_lit;
+
+static struct rtl9617c_gpio_group pwr;
+static u32 pwr_bit, pwr_inverted;
+static bool pwr_claimed, pwr_on;
+static ulong pwr_since;
+static struct cyclic_info pwr_cyclic;
+static bool pwr_cyclic_on;
 
 static int lamp_select(void)
 {
@@ -67,6 +79,73 @@ static void lamp_show(u32 lit)
 		return;
 	lamp_lit = lit;
 	rtl9617c_gpio_group_write(&lamps, lit ^ lamp_inverted);
+}
+
+/*
+ * The power lamp: claimed by rtk_board_boot_beat() for the normal boot path,
+ * released again by RTK_LEDS_OFF or by the first panel claim. The cyclic
+ * tick below keeps it blinking without a dedicated poll site.
+ */
+static void pwr_release(void)
+{
+	if (!pwr_claimed)
+		return;
+	rtl9617c_gpio_group_release(&pwr);
+	pwr_claimed = false;
+}
+
+static void pwr_tick(void)
+{
+	bool on;
+
+	if (!pwr_claimed)
+		return;
+	on = get_timer(pwr_since) % 1000 < 500;
+	if (on == pwr_on)
+		return;
+	pwr_on = on;
+	rtl9617c_gpio_group_write(&pwr, (on ? pwr_bit : 0) ^ pwr_inverted);
+}
+
+static void pwr_cyclic_run(struct cyclic_info *cyclic)
+{
+	pwr_tick();
+}
+
+static int pwr_claim(void)
+{
+	const struct rtk_board_variant *variant = rtk_board_desc()->variant;
+	unsigned int pin;
+
+	if (pwr_claimed)
+		return 0;
+	if (!variant || variant->pwr.pin >= RTL9617C_GPIO_PINS)
+		return -1;
+	pin = variant->pwr.pin;
+	rtl9617c_led_release();
+	if (rtl9617c_gpio_group_select(&pwr, &pin, 1))
+		return -1;
+	pwr_bit = BIT(pin % RTL9617C_GPIO_BANK_PINS);
+	pwr_inverted = variant->pwr.active_low ? pwr_bit : 0;
+	rtl9617c_gpio_group_claim(&pwr, pwr_inverted);
+	pwr_claimed = true;
+	pwr_on = false;
+	pwr_since = get_timer(0);
+	if (!pwr_cyclic_on) {
+		cyclic_register(&pwr_cyclic, pwr_cyclic_run, 50 * 1000, "rtk_pwr");
+		pwr_cyclic_on = true;
+	}
+
+	return 0;
+}
+
+/* The normal boot path: the power lamp beats once a second while u-boot
+ * runs, until the preboot hook hands the lamps back. */
+void rtk_board_boot_beat(void)
+{
+	if (pwr_claim())
+		return;
+	pwr_since = get_timer(0);
 }
 
 void rtk_board_boot_leds(void)
@@ -166,6 +245,7 @@ void rtk_board_leds_poll(void)
 void rtk_board_leds(enum rtk_led_state state)
 {
 	if (state == RTK_LEDS_OFF) {
+		pwr_release();
 		if (lamp_state != RTK_LEDS_OFF)
 			lamp_release();
 		lamp_state = RTK_LEDS_OFF;
@@ -174,6 +254,7 @@ void rtk_board_leds(enum rtk_led_state state)
 	if (lamp_state == RTK_LEDS_OFF) {
 		if (lamp_select())
 			return;
+		pwr_release();
 		rtl9617c_gpio_group_claim(&lamps, lamp_inverted);
 	} else if (state == lamp_state) {
 		return;

@@ -26,6 +26,7 @@ struct rtk_led {
 struct rtk_board_variant {
 	const struct rtk_led *lamp;
 	unsigned int nr_lamps;
+	struct rtk_led pwr;			/* the power lamp, beaten at boot */
 	const char *ports;			/* shown by the recovery page */
 };
 

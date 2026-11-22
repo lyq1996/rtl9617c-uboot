@@ -551,14 +551,12 @@ static int commit_firmware(const struct storage_job *ctx)
 
 static int boot_ram(void)
 {
-	ulong addr = map_to_sysmem(w.buf);
-
 	if (fit_check_format(w.buf, w.size))
 		return fail(-EINVAL, "the image is not a bootable FIT");
-	env_set_hex("unzip_src", addr);
-	run_commandf("bootm 0x%lx", addr);
+	printf("Image accepted; the service boots it from RAM shortly.\n");
+	fs_boot_schedule(map_to_sysmem(w.buf));
 
-	return fail(-EIO, "booting the image from RAM failed");
+	return 0;
 }
 
 static int write_commit(void)
@@ -603,7 +601,9 @@ static int write_commit(void)
 		return ret;
 	}
 	w.updating = false;
-	write_release();
+	/* The RAM image stays reserved until bootm runs. */
+	if (w.op != W_RAM)
+		write_release();
 	w.stage = W_DONE;
 
 	return 0;

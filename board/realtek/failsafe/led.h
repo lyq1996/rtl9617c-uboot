@@ -15,7 +15,7 @@ enum rtk_led_state {
 	RTK_LEDS_FAILED,	/* write failed: odd and even lamps alternate */
 };
 
-void rtk_board_boot_leds(void);
+void rtk_board_boot_beat(void);
 void rtk_board_leds(enum rtk_led_state state);
 void rtk_board_leds_busy(size_t done, size_t total);
 void rtk_board_leds_progress(size_t bytes);

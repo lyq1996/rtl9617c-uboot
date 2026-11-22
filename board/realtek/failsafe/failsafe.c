@@ -54,13 +54,12 @@ int rtk_board_failsafe_spy(void)
 
 	if (!reset_latched) {
 		puts("Reset released: normal boot\n");
-		rtk_board_boot_leds();
+		rtk_board_boot_beat();
 		return 0;
 	}
 	if (reset_latched)
 		rtk_board_leds(RTK_LEDS_HELD);
 
-	rtk_board_boot_leds();
 	puts("Reset held: starting the web failsafe service\n");
 	ret = rtk_start_failsafe();
 	rtk_board_leds(RTK_LEDS_OFF);

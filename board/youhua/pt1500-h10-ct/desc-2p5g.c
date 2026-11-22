@@ -26,6 +26,7 @@ static const struct rtk_led pt1500_h10_ct_2p5g_lamps[] = {
 static const struct rtk_board_variant pt1500_h10_ct_2p5g_variant = {
 	.lamp = pt1500_h10_ct_2p5g_lamps,
 	.nr_lamps = ARRAY_SIZE(pt1500_h10_ct_2p5g_lamps),
+	.pwr = { .pin = 11 },
 	.ports = "2.5GE + 3×GE",
 };
 

@@ -12,6 +12,7 @@ static const struct rtk_led tyfza1_2p5g_lamps[] = {
 static const struct rtk_board_variant tyfza1_2p5g_variant = {
 	.lamp = tyfza1_2p5g_lamps,
 	.nr_lamps = ARRAY_SIZE(tyfza1_2p5g_lamps),
+	.pwr = { .pin = 70, },
 	.ports = "2.5GE + 3×GE",
 };
 

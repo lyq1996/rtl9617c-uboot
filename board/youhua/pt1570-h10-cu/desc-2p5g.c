@@ -40,7 +40,7 @@
  * in U-Boot; those are hardware limits, not something this build can fix.
  *
  * Why the order matters (failsafe/led.c, do NOT "simplify" this):
- *   rtk_board_boot_leds() sweeps lamp[0..n] once at power-on;
+ *   the boot beat (RTK_LEDS_BOOT) pulses the power lamp once a second;
  *   RTK_LEDS_IDLE runs lamp_runner() along the array (one lamp + its trailing
  *   neighbour, 150 ms/step); RTK_LEDS_BUSY fills lamp_bar() from index 0;
  *   DONE holds all on for 2 s; FAILED alternates odd/even indices.
@@ -87,6 +87,7 @@ static const struct rtk_led pt1570_h10_cu_2p5g_lamps[] = {
 static const struct rtk_board_variant pt1570_h10_cu_2p5g_variant = {
 	.lamp = pt1570_h10_cu_2p5g_lamps,
 	.nr_lamps = ARRAY_SIZE(pt1570_h10_cu_2p5g_lamps),
+	.pwr = { .pin = 11 },
 	.ports = "2.5GE + 3×GE",
 };
 

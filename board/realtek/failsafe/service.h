@@ -16,6 +16,7 @@ u32 fs_job_start(const char *op, fs_work_fn work, bool writes);
 bool fs_job_active(void);
 void fs_job_context(struct storage_job *ctx);
 void fs_job_progress(size_t done, size_t total);
+void fs_boot_schedule(ulong address);
 int fs_fail(int ret, const char *fmt, ...)
 	__attribute__ ((format (__printf__, 2, 3)));
 void fs_reply_job(struct httpd_reply *reply, u32 job, u32 id, size_t chunk);
