@@ -74,6 +74,7 @@ static struct spi_nand_flash spi_nand_table[] = {
     SPI_NAND_INFO("DS35Q2GA-IB", 0xE5, 0x72, PAGE_2KB,  OOB_64B, PAGES_PER_BLK, 2048, 1, 4, SPI_NAND_NEED_PLANE_SELECT|SPI_NAND_NEED_QE_ENABLE),
     SPI_NAND_INFO("DS35Q1GB-IB", 0xE5, 0xF1, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 1024, 1, 8, SPI_NAND_NEED_QE_ENABLE),
     SPI_NAND_INFO("DS35Q2GB-IB", 0xE5, 0xF2, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 2048, 1, 8, SPI_NAND_NEED_PLANE_SELECT|SPI_NAND_NEED_QE_ENABLE),
+    SPI_NAND_INFO("DS35Q2GBS-IB", 0xE5, 0xB2, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 2048, 1, 8, SPI_NAND_NEED_PLANE_SELECT|SPI_NAND_NEED_QE_ENABLE),
     SPI_NAND_INFO("DS35Q4GM-IB", 0xE5, 0xF4, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 4096, 1, 8, SPI_NAND_NEED_PLANE_SELECT|SPI_NAND_NEED_QE_ENABLE),
 
     /* ESMT */
@@ -98,6 +99,8 @@ static struct spi_nand_flash spi_nand_table[] = {
     SPI_NAND_INFO("FM25S01BI3", 0xA1, 0xD4, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 1024, 1, 8, SPI_NAND_NEED_QE_ENABLE),
     SPI_NAND_INFO("FM25S02BI3", 0xA1, 0xD6, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 2048, 1, 8, SPI_NAND_NEED_QE_ENABLE),
     SPI_NAND_INFO("FM25G02BI3", 0xA1, 0xD2, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 2048, 1, 8, SPI_NAND_NEED_QE_ENABLE),
+    SPI_NAND_INFO("FM25G02C",   0xA1, 0x92, PAGE_2KB, OOB_64B,  PAGES_PER_BLK, 2048, 1, 4, SPI_NAND_NEED_QE_ENABLE),
+    SPI_NAND_INFO("FM25G02D",   0xA1, 0xF2, PAGE_2KB, OOB_64B,  PAGES_PER_BLK, 2048, 1, 4, SPI_NAND_NEED_QE_ENABLE),
 
     /* GD */
     SPI_NAND_INFO("GD5F1GQ4UxYIG", 0xC8, 0xD1, PAGE_2KB, OOB_128B, PAGES_PER_BLK, 1024, 1, 8, SPI_NAND_MFR_IS_GD|SPI_NAND_NEED_QE_ENABLE),
@@ -2894,6 +2897,7 @@ static void spi_nand_dosilicon_ecc_status(struct spi_nand_info *info, uint32_t s
 
         case 0xF1: //DS35Q1GB-IB
         case 0xF2: //DS35Q2GB-IB
+        case 0xB2: //DS35Q2GBS-IB
         case 0xF4: //DS35Q4GM-IB
             spi_nand_mt29f_ecc_status(info, status, corrected, ecc_error);
             break;
@@ -2948,6 +2952,19 @@ static void spi_nand_fm25g02bi3_ecc_status(struct spi_nand_info *info, uint32_t 
 
 }
 
+/* FM25G02C/FM25G02D: corrected count is reported directly in status bits[6:4];
+ * value 7 means uncorrectable. Same decode as the stock 2024-12-02 firmware. */
+static void spi_nand_fm25g02cd_ecc_status(struct spi_nand_info *info, uint32_t status, uint32_t *corrected, uint32_t *ecc_error)
+{
+    uint32_t ecc_status = (status & SPI_NAND_MT29F_ECC_MASK) >> SPI_NAND_STATUS_ECC_SHIFT;
+
+    if (ecc_status == 7)
+        *ecc_error = 1;
+    else
+        *corrected = ecc_status;
+    return;
+}
+
 static void spi_nand_fmsh_ecc_status(struct spi_nand_info *info, uint32_t status, uint32_t *corrected, uint32_t *ecc_error)
 {
     switch(info->dev_id) {
@@ -2964,6 +2981,11 @@ static void spi_nand_fmsh_ecc_status(struct spi_nand_info *info, uint32_t status
 
         case 0xD2: //FM25G02BI3
             spi_nand_fm25g02bi3_ecc_status(info, status, corrected, ecc_error);
+            break;
+
+        case 0x92: //FM25G02C
+        case 0xF2: //FM25G02D
+            spi_nand_fm25g02cd_ecc_status(info, status, corrected, ecc_error);
             break;
 
         default:
