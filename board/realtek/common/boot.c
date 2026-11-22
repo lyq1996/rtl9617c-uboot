@@ -17,6 +17,7 @@
 #include <rtk_board.h>
 #ifdef CONFIG_RTK_WEB_FAILSAFE
 #include <failsafe/failsafe.h>
+#include <failsafe/led.h>
 #endif
 #include <ubi_uboot.h>
 #include <asm/arch/soc.h>
@@ -47,6 +48,10 @@ void rtk_board_late_env(void)
 
 void rtk_board_preboot(void)
 {
+#ifdef CONFIG_RTK_WEB_FAILSAFE
+	/* Hand the status lamps back before the OS takes over. */
+	rtk_board_leds(RTK_LEDS_OFF);
+#endif
 	rtl9617c_ni_stop_all();
 	rtl9617c_xram_restore();
 }

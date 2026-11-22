@@ -54,6 +54,7 @@ int rtk_board_failsafe_spy(void)
 
 	if (!reset_latched) {
 		puts("Reset released: normal boot\n");
+		rtk_board_boot_leds();
 		return 0;
 	}
 	if (reset_latched)
